@@ -36,37 +36,43 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		userID string
-		amount int
-	}{"", 0}
+		userID  string
+		balance float64
+	}{"", 0.0}
 
 	err := decoder.Decode(&req)
-	if err != nil {
-		panic(err)
-	}
+	failOnError(err, "Failed to parse the request")
 
-	queryString := "INSERT INTO users (user_id, balance) VALUES ($1, $2)"
+	queryString := "INSERT INTO users (user_id, balance) VALUES ($1, $2)" +
+		"ON CONFLICT (user_id) DO UPDATE SET balance = excluded.balance + $2"
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")
 
-	res, err := stmt.Exec(req.userID, req.amount)
-	failOnError(err, "Failed to insert")
+	res, err := stmt.Exec(req.userID, req.balance)
+	failOnError(err, "Failed to add balance")
 
 	numrows, err := res.RowsAffected()
 	if numrows < 1 {
-		failOnError(err, "Failed to insert")
+		failOnError(err, "Failed to add balance")
 	}
 
 	//w.WriteHeader(http.StatusOK)
 }
 
 func quoteHandler(w http.ResponseWriter, r *http.Request) {
+	//decoder := json.NewDecoder(r.Body)
 
 }
 
 func buyHandler(w http.ResponseWriter, r *http.Request) {
+	// Quote using
 
+	// Charge user account
+
+	// Take balance and divide it by the quote value
+
+	// Add dividend to user's stock
 }
 
 func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
