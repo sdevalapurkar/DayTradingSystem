@@ -6,6 +6,11 @@ import json
 c = ''
 
 # Add funds to account
+# Method: POST
+# Parameters:
+#       user_id:    the id of the user adding funds to their account
+#       amount:     (int) the amount of money to add to the user's account
+# 
 @app.route('/add', methods=['GET', 'POST'])
 def addHandler():
     # Check http method is a post
