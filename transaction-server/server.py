@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, request
-app = Flask(__name__)
 from crate import client
 import json
+
+app = Flask(__name__)
 
 c = ''
 
@@ -32,13 +33,37 @@ def addHandler():
         return 404
 
 
+# Request a quote for a given stock symbol
+# Method: POST
+# Parameters:
+#       symbol:     three-letter stock symbol to return quote for
+#
 @app.route('/quote')
 def quoteHandler():
     pass
 
+# Returns
+def getQuote(ticker):
+    return 50
+
+# Performs a buy transaction for a given user on a given stock
+# Parameters
 @app.route('/buy')
 def buyHandler():
+    if request.method == 'POST':
+        # Parse posted data into json object
+        data = request.get_json()
+        pps = getQuote(data['symbol'])
+
+    # TODO: get price of stock
+    # Calculate total cost
+    # Check user has enough funds
+    # If they do, buy them
+    #       reduce user balance
+    #       increase user stock balance
+    # If they don't, return 'nah g'
     pass
+
 
 @app.route('/commit_buy')
 def commitBuyHandler():
