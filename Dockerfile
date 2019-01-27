@@ -1,6 +1,12 @@
-FROM crate
+FROM crate:latest
 
-RUN mkdir /entry
-COPY ./crate_entry_point.sh /entry
+COPY . /
 
-ENTRYPOINT ["sh", "/entry/crate_entry_point.sh"]
+
+#ENTRYPOINT ["sh", "/crate_entry_point.sh"]
+
+CMD ["crate"]
+
+#CMD ["/crate_entry_point.sh"]
+
+#CMD ["sh", "-c", "crate; /crate_entry_point.sh"]
