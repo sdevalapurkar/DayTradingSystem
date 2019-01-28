@@ -310,7 +310,16 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		UserID string
+	}{""}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	cache.LPop(req.UserID + ":sell")
 }
 
 func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
