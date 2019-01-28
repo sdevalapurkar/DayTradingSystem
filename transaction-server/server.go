@@ -127,7 +127,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	price := getQuote(req.Symbol)
 	
 	// Calculate total cost to buy given amount of given stock
-	cost := price * req.Amount
+	cost := int(req.Amount / price)
 
 	// Query to get the current balance of the user
 	queryString := "SELECT balance FROM users WHERE user_id = $1;"
