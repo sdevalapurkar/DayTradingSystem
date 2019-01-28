@@ -127,7 +127,9 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	price := getQuote(req.Symbol)
 	
 	// Calculate total cost to buy given amount of given stock
-	cost := int(req.Amount / price)
+	buy_number := int(req.Amount / price)
+
+	cost := float64(buy_number) * price
 
 	// Query to get the current balance of the user
 	queryString := "SELECT balance FROM users WHERE user_id = $1;"
@@ -161,8 +163,10 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 			failOnError(err, "Failed to reserve funds")
 		}
 
+		fmt.Println(buy_number)
+
 		// Add buy transaction to front of user's transaction list
-		cache.LPush(req.UserID + ":buy", req.Symbol + ":" + strconv.FormatFloat(req.Amount, 'f', -1, 64))
+		cache.LPush(req.UserID + ":buy", req.Symbol + ":" + strconv.Itoa(buy_number))
 	}
 }
 
@@ -182,6 +186,9 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	task := cache.LPop(req.UserID + ":buy")
 
 	tasks := strings.Split(task.Val(), ":")
+
+	fmt.Println(tasks[1])
+	fmt.Println(tasks[0])
 
 	// Check if there are any buy transactions to perform
 	if len(tasks) <= 1 {
@@ -216,7 +223,7 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 		UserID string
 		Amount float64 // Dollar value to sell
 		Symbol string
-	}
+	}{"", 0, ""}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
@@ -226,8 +233,11 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 	// Calculate the number of the stock to sell
 	sell_number := int(req.Amount / price)
 
+	sale_price := price * float64(sell_number)
+
+	// TODO: Should handle an attempted sale of unowned stocks
 	// Check that the user has enough stocks to sell
-	queryString := "SELECT amount FROM stocks WHERE user_id = $1 and symbol = $2"
+	queryString := "SELECT quantity FROM stocks WHERE user_id = $1 and symbol = $2"
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -241,7 +251,7 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the user has enough
 	if balance >= sell_number {
-		queryString = "UPDATE stocks SET amount = amount - $1 where user_id = $2 and symbol = $3;"
+		queryString = "UPDATE stocks SET quantity = quantity - $1 where user_id = $2 and symbol = $3;"
 		stmt, err = db.Prepare(queryString)
 		failOnError(err, "Failed to prepare query")
 
@@ -253,8 +263,8 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 		if numrows < 1 {
 			failOnError(err, "Failed to reserve stocks to sell")
 		}
-
-		cache.LPush(req.UserID + ":sell", req.Symbol + ":" + strconv.FormatFloat(req.Amount, 'f', -1, 64))
+		fmt.Println(sale_price)
+		cache.LPush(req.UserID + ":sell", req.Symbol + ":" + strconv.FormatFloat(sale_price, 'f', -1, 64))
 	}
 }
 
@@ -264,12 +274,12 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := struct {
 		UserID string
-	}
+	}{""}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
-	task := cache.LPOP(req.UserID + ":sell")
+	task := cache.LPop(req.UserID + ":sell")
 
 	tasks := strings.Split(task.Val(), ":")
 
@@ -278,12 +288,16 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println(tasks[1])
+
 	queryString := "UPDATE users SET balance = balance + $1 WHERE user_id = $2;"
 	stmt, err := db.Prepare(queryString)
 
 	failOnError(err, "Failed to prepare query")
 
-	res, err := stmt.Exec(tasks[1], res.UserID)
+
+	fmt.Println(tasks[1])
+	res, err := stmt.Exec(tasks[1], req.UserID)
 	failOnError(err, "Failed to refund money for stock sale")
 
 	numrows, err := res.RowsAffected()
