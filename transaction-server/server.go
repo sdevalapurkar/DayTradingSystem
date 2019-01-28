@@ -202,7 +202,6 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	if numrows < 1 {
 		failOnError(err, "Failed to add stocks to account")
 	}
-
 }
 
 
@@ -215,7 +214,7 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := struct {
 		UserID string
-		Amount float64
+		Amount float64 // Dollar value to sell
 		Symbol string
 	}
 
@@ -224,7 +223,8 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 
 	price := getQuote(req.Symbol)
 
-	cost := price * req.Amount
+	// Calculate the number of the stock to sell
+	sell_number := int(req.Amount / price)
 
 	// Check that the user has enough stocks to sell
 	queryString := "SELECT amount FROM stocks WHERE user_id = $1 and symbol = $2"
@@ -232,21 +232,21 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")
 
+	// Number of given stock owned by user
 	var balance int
-
-	err = stmt.QueryRow(req.UserID, req.Symbol)
+	err = stmt.QueryRow(req.UserID, req.Symbol).Scan(&balance)
 	failOnError(err, "Failed to retrieve number of given stock owned by user")
 
 	defer stmt.Close()
 
 	// Check if the user has enough
-	if balance >= req.Amount {
+	if balance >= sell_number {
 		queryString = "UPDATE stocks SET amount = amount - $1 where user_id = $2 and symbol = $3;"
 		stmt, err = db.Prepare(queryString)
 		failOnError(err, "Failed to prepare query")
 
 		// Withdraw the stocks to sell from user's account
-		res, err := stmt.Exec(req.Amount, req.UserID, req.Symbol)
+		res, err := stmt.Exec(sell_number, req.UserID, req.Symbol)
 		failOnError(err, "Failed to reserve stocks to sell")
 
 		numrows, err := res.RowsAffected()
