@@ -7,6 +7,7 @@ crash --verbose -c "CREATE TABLE IF NOT EXISTS users(
 crash -c "CREATE TABLE IF NOT EXISTS stocks(
     user_id STRING,
     symbol STRING,
-    quantity INT
+    quantity INT,
+    PRIMARY KEY (user_id, symbol)
 );"
 exec "$@"
