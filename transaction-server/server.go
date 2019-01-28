@@ -40,12 +40,12 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		Balance float64
 	}{"", 0.0}
 
+	// Read request json into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
 
-	fmt.Println(req.UserID)
-	fmt.Println(req.Balance)
-
+	
+	// Insert new user if they don't already exist, otherwise update their balance
 	queryString := "INSERT INTO users (user_id, balance) VALUES ($1, $2)" +
 		"ON CONFLICT (user_id) DO UPDATE SET balance = balance + $2"
 
@@ -55,6 +55,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := stmt.Exec(req.UserID, req.Balance)
 	failOnError(err, "Failed to add balance")
 
+	// Check the query actually did something (because this one should always modify something, unless add 0..?)
 	numrows, err := res.RowsAffected()
 	if numrows < 1 {
 		failOnError(err, "Failed to add balance")
