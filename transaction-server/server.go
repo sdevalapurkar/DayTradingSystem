@@ -67,7 +67,6 @@ func loadDb() *sql.DB {
 
 func addHandler(w http.ResponseWriter, r *http.Request) {
 
-	RedisClient()
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
@@ -212,12 +211,88 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func sellHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		UserID string
+		Amount float64
+		Symbol string
+	}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	price := getQuote(req.Symbol)
+
+	cost := price * req.Amount
+
+	// Check that the user has enough stocks to sell
+	queryString := "SELECT amount FROM stocks WHERE user_id = $1 and symbol = $2"
+
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare query")
+
+	var balance int
+
+	err = stmt.QueryRow(req.UserID, req.Symbol)
+	failOnError(err, "Failed to retrieve number of given stock owned by user")
+
+	defer stmt.Close()
+
+	// Check if the user has enough
+	if balance >= req.Amount {
+		queryString = "UPDATE stocks SET amount = amount - $1 where user_id = $2 and symbol = $3;"
+		stmt, err = db.Prepare(queryString)
+		failOnError(err, "Failed to prepare query")
+
+		// Withdraw the stocks to sell from user's account
+		res, err := stmt.Exec(req.Amount, req.UserID, req.Symbol)
+		failOnError(err, "Failed to reserve stocks to sell")
+
+		numrows, err := res.RowsAffected()
+		if numrows < 1 {
+			failOnError(err, "Failed to reserve stocks to sell")
+		}
+
+		cache.LPush(req.UserID + ":sell", req.Symbol + ":" + strconv.FormatFloat(req.Amount, 'f', -1, 64))
+	}
 }
+
 
 func commitSellHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+
+	req := struct {
+		UserID string
+	}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	task := cache.LPOP(req.UserID + ":sell")
+
+	tasks := strings.Split(task.Val(), ":")
+
+	if len(tasks) <= 1 {
+		w.Write([]byte("Failed to commit sell transaction: no sell orders exist"))
+		return
+	}
+
+	queryString := "UPDATE users SET balance = balance + $1 WHERE user_id = $2;"
+	stmt, err := db.Prepare(queryString)
+
+	failOnError(err, "Failed to prepare query")
+
+	res, err := stmt.Exec(tasks[1], res.UserID)
+	failOnError(err, "Failed to refund money for stock sale")
+
+	numrows, err := res.RowsAffected()
+	if numrows < 1 {
+		failOnError(err, "Failed to refund money for stock sale")
+	}
 
 }
+
 
 func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 
