@@ -36,20 +36,23 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		userID  string
-		balance float64
+		UserID  string
+		Balance float64
 	}{"", 0.0}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
 
+	fmt.Println(req.UserID)
+	fmt.Println(req.Balance)
+
 	queryString := "INSERT INTO users (user_id, balance) VALUES ($1, $2)" +
-		"ON CONFLICT (user_id) DO UPDATE SET balance = excluded.balance + $2"
+		"ON CONFLICT (user_id) DO UPDATE SET balance = balance + $2"
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")
 
-	res, err := stmt.Exec(req.userID, req.balance)
+	res, err := stmt.Exec(req.UserID, req.Balance)
 	failOnError(err, "Failed to add balance")
 
 	numrows, err := res.RowsAffected()
