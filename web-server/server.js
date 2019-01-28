@@ -27,7 +27,7 @@ app.put('/api/ADD', function(req, res) {
   console.log('Add endpoint');
   rp({
     method: 'PUT',
-    uri: `http://localhost:8008/api/ADD`,
+    uri: 'http://localhost:8008/api/ADD',
     body: req.body,
     json: true
   })
@@ -41,86 +41,234 @@ app.put('/api/ADD', function(req, res) {
 });
 
 app.post('/api/BUY', function(req, res) {
-  console.log(req.body);
   console.log('Buy endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8008/api/BUY',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.post('/api/COMMIT_BUY', function(req, res) {
-  console.log(req.body);
   console.log('Commit Buy endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8008/api/COMMIT_BUY',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.post('/api/CANCEL_BUY', function(req, res) {
-  console.log(req.body);
   console.log('Cancel buy endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8008/api/CANCEL_BUY',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.post('/api/SELL', function(req, res) {
-  console.log(req.body);
   console.log('Sell endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8008/api/SELL',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.post('/api/COMMIT_SELL', function(req, res) {
-  console.log(req.body);
   console.log('Commit sell endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8008/api/COMMIT_SELL',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.post('/api/CANCEL_SELL', function(req, res) {
-  console.log(req.body);
   console.log('Cancel sell endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8008/api/CANCEL_SELL',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.post('/api/SET_BUY_AMOUNT', function(req, res) {
-  console.log(req.body);
   console.log('Set buy amount endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8008/api/SET_BUY_AMOUNT',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.post('/api/CANCEL_SET_BUY', function(req, res) {
-  console.log(req.body);
   console.log('Cancel set buy endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8008/api/CANCEL_SET_BUY',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.post('/api/SET_BUY_TRIGGER', function(req, res) {
-  console.log(req.body);
   console.log('Set sell trigger endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8008/api/SET_BUY_TRIGGER',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.post('/api/SET_SELL_AMOUNT', function(req, res) {
-  console.log(req.body);
   console.log('Set sell amount endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8008/api/SET_SELL_AMOUNT',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.post('/api/SET_SELL_TRIGGER', function(req, res) {
-  console.log(req.body);
   console.log('Set sell trigger endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8008/api/SET_SELL_TRIGGER',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.post('/api/CANCEL_SET_SELL', function(req, res) {
-  console.log(req.body);
   console.log('Cancel set sell endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8008/api/CANCEL_SET_SELL',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.get('/api/DUMPLOG', function(req, res) {
-  console.log(req.query);
   console.log('Dumplog endpoint');
+  rp({
+    uri: `http://localhost:8008/api/DUMPLOG?${req.originalUrl}`
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
 app.get('/api/DISPLAY_SUMMARY', function(req, res) {
-  console.log(req.query);
   console.log('Display summary endpoint');
+  rp({
+    uri: `http://localhost:8008/api/DISPLAY_SUMMARY?${req.originalUrl}`
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey from put')
 });
 
