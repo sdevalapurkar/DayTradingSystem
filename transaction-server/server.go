@@ -5,14 +5,47 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
+	"strconv"
 
 	_ "github.com/herenow/go-crate"
+	"github.com/go-redis/redis"
 )
 
 var (
 	dbstring = "http://localhost:4200/"
 	db       = loadDb()
+	cache = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
 )
+
+func RedisClient() {
+	err := cache.Set("key", "value", 0).Err()
+	if err != nil {
+		panic(err)
+	}
+
+	val, err := cache.Get("key").Result()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("key", val)
+
+	val2, err := cache.Get("key2").Result()
+	if err == redis.Nil {
+		fmt.Println("key2 does not exist")
+	} else if err != nil {
+		panic(err)
+	} else {
+		fmt.Println("key2", val2)
+	}
+	// Output: key value
+	// key2 does not exist
+}
+
 
 func failOnError(err error, msg string) {
 	if err != nil {
@@ -33,56 +66,247 @@ func loadDb() *sql.DB {
 }
 
 func addHandler(w http.ResponseWriter, r *http.Request) {
+
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		userID string
-		amount int
-	}{"", 0}
+		UserID  string
+		Balance float64
+	}{"", 0.0}
 
+	// Read request json into struct
 	err := decoder.Decode(&req)
-	if err != nil {
-		panic(err)
-	}
+	failOnError(err, "Failed to parse the request")
 
-	queryString := "INSERT INTO users (user_id, balance) VALUES ($1, $2)"
+	
+	// Insert new user if they don't already exist, otherwise update their balance
+	queryString := "INSERT INTO users (user_id, balance) VALUES ($1, $2)" +
+		"ON CONFLICT (user_id) DO UPDATE SET balance = balance + $2"
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")
 
-	res, err := stmt.Exec(req.userID, req.amount)
-	failOnError(err, "Failed to insert")
+	res, err := stmt.Exec(req.UserID, req.Balance)
+	failOnError(err, "Failed to add balance")
 
+	// Check the query actually did something (because this one should always modify something, unless add 0..?)
 	numrows, err := res.RowsAffected()
 	if numrows < 1 {
-		failOnError(err, "Failed to insert")
+		failOnError(err, "Failed to add balance")
 	}
 
 	//w.WriteHeader(http.StatusOK)
 }
 
+
+func getQuote (symbol string) float64 {
+	return 50.0
+}
+
+
 func quoteHandler(w http.ResponseWriter, r *http.Request) {
+	//decoder := json.NewDecoder(r.Body)
 
 }
+
 
 func buyHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		UserID string
+		Amount float64
+		Symbol string
+	}{"", 0.0, ""}
+
+	// Read request json data into struct
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse the request")
+
+	// Get price of requested stock
+	price := getQuote(req.Symbol)
+	
+	// Calculate total cost to buy given amount of given stock
+	buy_number := int(req.Amount / price)
+
+	cost := float64(buy_number) * price
+
+	// Query to get the current balance of the user
+	queryString := "SELECT balance FROM users WHERE user_id = $1;"
+
+	// Try to prepare query
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare query")
+
+	var balance float64
+
+	// Try to perform the query and get the user's balance
+	// TODO: this should probably handle a user buy when the user doesn't exist, but it doesn't right now.
+	err = stmt.QueryRow(req.UserID).Scan(&balance)
+	failOnError(err, "Failed to get user balance")
+
+	defer stmt.Close()
+
+	// Check user balance against cost of requested stock purchase
+	if balance >= cost {
+		// User has enough, do reserve the funds by pulling them from the account
+		queryString = "UPDATE users SET balance = balance - $1 WHERE user_id = $2"
+		stmt, err := db.Prepare(queryString)
+		failOnError(err, "Failed to prepare withdraw query")
+		
+		// Withdraw funds from user's account
+		res, err := stmt.Exec(cost, req.UserID)
+		failOnError(err, "Failed to withdraw money from user account")
+
+		numrows, err := res.RowsAffected()
+		if numrows < 1 {
+			failOnError(err, "Failed to reserve funds")
+		}
+
+		fmt.Println(buy_number)
+
+		// Add buy transaction to front of user's transaction list
+		cache.LPush(req.UserID + ":buy", req.Symbol + ":" + strconv.Itoa(buy_number))
+	}
 }
+
 
 func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		UserID string
+	}{""}
+
+	// Parse request parameters into struct (just user_id)
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	// Get most recent buy transaction 
+	task := cache.LPop(req.UserID + ":buy")
+
+	tasks := strings.Split(task.Val(), ":")
+
+	fmt.Println(tasks[1])
+	fmt.Println(tasks[0])
+
+	// Check if there are any buy transactions to perform
+	if len(tasks) <= 1 {
+		w.Write([]byte("Failed to commit buy transaction: no buy orders exist"))
+		return
+	}
+
+	// Add new stocks to user's account
+	queryString := "INSERT INTO stocks (quantity, symbol, user_id) VALUES ($1, $2, $3) " +
+		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $1;"
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare query")
+
+	res, err := stmt.Exec(tasks[1], tasks[0], req.UserID)
+	failOnError(err, "Failed to add stocks to account")
+
+	numrows, err := res.RowsAffected()
+	if numrows < 1 {
+		failOnError(err, "Failed to add stocks to account")
+	}
 }
+
+
 func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
 func sellHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		UserID string
+		Amount float64 // Dollar value to sell
+		Symbol string
+	}{"", 0, ""}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	price := getQuote(req.Symbol)
+
+	// Calculate the number of the stock to sell
+	sell_number := int(req.Amount / price)
+
+	sale_price := price * float64(sell_number)
+
+	// TODO: Should handle an attempted sale of unowned stocks
+	// Check that the user has enough stocks to sell
+	queryString := "SELECT quantity FROM stocks WHERE user_id = $1 and symbol = $2"
+
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare query")
+
+	// Number of given stock owned by user
+	var balance int
+	err = stmt.QueryRow(req.UserID, req.Symbol).Scan(&balance)
+	failOnError(err, "Failed to retrieve number of given stock owned by user")
+
+	defer stmt.Close()
+
+	// Check if the user has enough
+	if balance >= sell_number {
+		queryString = "UPDATE stocks SET quantity = quantity - $1 where user_id = $2 and symbol = $3;"
+		stmt, err = db.Prepare(queryString)
+		failOnError(err, "Failed to prepare query")
+
+		// Withdraw the stocks to sell from user's account
+		res, err := stmt.Exec(sell_number, req.UserID, req.Symbol)
+		failOnError(err, "Failed to reserve stocks to sell")
+
+		numrows, err := res.RowsAffected()
+		if numrows < 1 {
+			failOnError(err, "Failed to reserve stocks to sell")
+		}
+		fmt.Println(sale_price)
+		cache.LPush(req.UserID + ":sell", req.Symbol + ":" + strconv.FormatFloat(sale_price, 'f', -1, 64))
+	}
 }
+
 
 func commitSellHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+
+	req := struct {
+		UserID string
+	}{""}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	task := cache.LPop(req.UserID + ":sell")
+
+	tasks := strings.Split(task.Val(), ":")
+
+	if len(tasks) <= 1 {
+		w.Write([]byte("Failed to commit sell transaction: no sell orders exist"))
+		return
+	}
+
+	fmt.Println(tasks[1])
+
+	queryString := "UPDATE users SET balance = balance + $1 WHERE user_id = $2;"
+	stmt, err := db.Prepare(queryString)
+
+	failOnError(err, "Failed to prepare query")
+
+
+	fmt.Println(tasks[1])
+	res, err := stmt.Exec(tasks[1], req.UserID)
+	failOnError(err, "Failed to refund money for stock sale")
+
+	numrows, err := res.RowsAffected()
+	if numrows < 1 {
+		failOnError(err, "Failed to refund money for stock sale")
+	}
 
 }
+
 
 func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 
