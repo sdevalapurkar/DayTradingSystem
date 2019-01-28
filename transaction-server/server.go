@@ -5,18 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"strconv"
+	"strings"
 
-	_ "github.com/herenow/go-crate"
 	"github.com/go-redis/redis"
+	_ "github.com/herenow/go-crate"
 )
 
+var host = "http://192.168.99.100"
+
 var (
-	dbstring = "http://localhost:4200/"
+	dbstring = host + ":4200/"
 	db       = loadDb()
-	cache = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+	cache    = redis.NewClient(&redis.Options{
+		Addr:     "192.168.99.100:6379",
 		Password: "",
 		DB:       0,
 	})
@@ -45,7 +47,6 @@ func RedisClient() {
 	// Output: key value
 	// key2 does not exist
 }
-
 
 func failOnError(err error, msg string) {
 	if err != nil {
@@ -78,7 +79,6 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
 
-	
 	// Insert new user if they don't already exist, otherwise update their balance
 	queryString := "INSERT INTO users (user_id, balance) VALUES ($1, $2)" +
 		"ON CONFLICT (user_id) DO UPDATE SET balance = balance + $2"
@@ -98,17 +98,14 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	//w.WriteHeader(http.StatusOK)
 }
 
-
-func getQuote (symbol string) float64 {
+func getQuote(symbol string) float64 {
 	return 50.0
 }
-
 
 func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	//decoder := json.NewDecoder(r.Body)
 
 }
-
 
 func buyHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
@@ -125,7 +122,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get price of requested stock
 	price := getQuote(req.Symbol)
-	
+
 	// Calculate total cost to buy given amount of given stock
 	buy_number := int(req.Amount / price)
 
@@ -153,7 +150,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		queryString = "UPDATE users SET balance = balance - $1 WHERE user_id = $2"
 		stmt, err := db.Prepare(queryString)
 		failOnError(err, "Failed to prepare withdraw query")
-		
+
 		// Withdraw funds from user's account
 		res, err := stmt.Exec(cost, req.UserID)
 		failOnError(err, "Failed to withdraw money from user account")
@@ -166,10 +163,9 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(buy_number)
 
 		// Add buy transaction to front of user's transaction list
-		cache.LPush(req.UserID + ":buy", req.Symbol + ":" + strconv.Itoa(buy_number))
+		cache.LPush(req.UserID+":buy", req.Symbol+":"+strconv.Itoa(buy_number))
 	}
 }
-
 
 func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
@@ -182,7 +178,7 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
-	// Get most recent buy transaction 
+	// Get most recent buy transaction
 	task := cache.LPop(req.UserID + ":buy")
 
 	tasks := strings.Split(task.Val(), ":")
@@ -211,9 +207,17 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		UserID string
+	}{""}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	cache.LPop(req.UserID + ":buy")
 }
 
 func sellHandler(w http.ResponseWriter, r *http.Request) {
@@ -264,10 +268,9 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 			failOnError(err, "Failed to reserve stocks to sell")
 		}
 		fmt.Println(sale_price)
-		cache.LPush(req.UserID + ":sell", req.Symbol + ":" + strconv.FormatFloat(sale_price, 'f', -1, 64))
+		cache.LPush(req.UserID+":sell", req.Symbol+":"+strconv.FormatFloat(sale_price, 'f', -1, 64))
 	}
 }
-
 
 func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
@@ -295,7 +298,6 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 
 	failOnError(err, "Failed to prepare query")
 
-
 	fmt.Println(tasks[1])
 	res, err := stmt.Exec(tasks[1], req.UserID)
 	failOnError(err, "Failed to refund money for stock sale")
@@ -306,7 +308,6 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
-
 
 func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -344,6 +345,7 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 func main() {
+	RedisClient()
 	port := ":8080"
 	http.HandleFunc("/add", addHandler)
 	http.HandleFunc("/quote", quoteHandler)
