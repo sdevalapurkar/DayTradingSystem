@@ -1,42 +1,19 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const rp = require('request-promise');
 const app = express();
-const port = 8009;
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
+const port = 8008;
+
 app.use(bodyParser.json());
 
 app.get('/api/QUOTE', function(req, res) {
-  console.log('web server received QUOTE')
-  console.log(req.query);
-  rp({
-    uri: `http://localhost:8008/api/QUOTE?${req.originalUrl}`
-  })
-    .then(data => {
-      console.log('data is ', data);
-    })
-    .catch(err => {
-      console.log('err is', err);
-    })
-  res.send('hey from get');
+  console.log(req.query)
+  console.log('Quote endpoint');
+  res.send('hey from get')
 });
 
 app.put('/api/ADD', function(req, res) {
+  console.log(req.body);
   console.log('Add endpoint');
-  rp({
-    method: 'PUT',
-    uri: `http://localhost:8008/api/ADD`,
-    body: req.body,
-    json: true
-  })
-    .then(data => {
-      console.log('data is ', data);
-    })
-    .catch(err => {
-      console.log('err is', err);
-    })
   res.send('hey from put')
 });
 

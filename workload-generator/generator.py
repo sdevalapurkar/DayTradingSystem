@@ -25,6 +25,7 @@ for line in lines:
       'user_id': commands[0],
       'amount': commands[1]
     }
+    print(command_dict)
     r = requests.put('http://localhost:8009/api/{}'.format(command_type), data=command_dict)
 
   # POST
