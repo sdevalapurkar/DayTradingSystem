@@ -64,13 +64,82 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	//w.WriteHeader(http.StatusOK)
 }
 
+
+func getQuote (symbol string) float64 {
+	return 50.0
+}
+
+
 func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	//decoder := json.NewDecoder(r.Body)
 
 }
 
 func buyHandler(w http.ResponseWriter, r *http.Request) {
-	// Quote using
+	decoder := json.NewDecoder(r.Body)
+
+	req := struct {
+		UserID string
+		Amount float64
+		Symbol string
+	}{"", 0.0, ""}
+
+	// Read request json data into struct
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse the request")
+
+	// Get price of requested stock
+	price := getQuote(req.Symbol)
+	
+	// Calculate total cost to buy given amount of given stock
+	cost := price * req.Amount
+
+	// Query to get the current balance of the user
+	queryString := "SELECT balance FROM users WHERE user_id = $1;"
+
+	// Try to prepare query
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare query")
+
+	var balance float64
+
+	// Try to perform the query and get the user's balance
+	// TODO: this should probably handle a user buy when the user doesn't exist, but it doesn't right now.
+	err = stmt.QueryRow(req.UserID).Scan(&balance)
+	failOnError(err, "Failed to get user balance")
+
+	defer stmt.Close()
+
+	// Check user balance against cost of requested stock purchase
+	if balance >= cost {
+		// User has enough, so do it!
+		queryString = "UPDATE users SET balance = balance - $1 WHERE user_id = $2"
+		stmt, err := db.Prepare(queryString)
+		failOnError(err, "Failed to prepare withdraw query")
+		
+		// Withdraw funds from user's account
+		res, err := stmt.Exec(balance, req.UserID)
+		failOnError(err, "Failed to withdraw money from user account")
+
+		queryString = "INSERT INTO stocks (quantity, symbol, user_id) VALUES ($1, $2, $3) " +
+						"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $1;"
+		stmt, err = db.Prepare(queryString)
+		failOnError(err, "Failed to prepare query")
+
+		res, err = stmt.Exec(req.Amount, req.Symbol, req.UserID)
+		failOnError(err, "Failed to add stocks to account")
+
+		numrows, err := res.RowsAffected()
+		if numrows < 1 {
+			failOnError(err, "Failed to add stocks to account")
+		}
+	}
+
+    // # If they do, buy them
+    // #       reduce user balance
+    // #       increase user stock balance
+	// # If they don't, return 'nah g'
+	
 
 	// Charge user account
 
