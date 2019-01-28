@@ -28,8 +28,8 @@ def test_add():
 def test_buy():
     data = {
         'userID': '69',
-        'amount': 20,
-        'symbol': 'abe'
+        'amount': 200,
+        'symbol': 'abc'
     }
 
     r = requests.post(URL_ROOT + '/buy', json=data)
@@ -43,8 +43,30 @@ def test_commit_buy():
     r = requests.post(URL_ROOT + '/commit_buy', json=data)
 
 
+def test_sell():
+    data = {
+        'userID': '69',
+        'amount': 300,
+        'symbol': 'abc'
+    }
+
+    r = requests.post(URL_ROOT + '/sell', json=data)
+
+
+def test_commit_sell():
+    data = {
+        'userID': '69'
+    }
+    
+    r = requests.post(URL_ROOT + '/commit_sell', json=data)
+
+
+
 if __name__ == '__main__':
     
     #test_add()
     #test_buy()
-    test_commit_buy()
+    #test_commit_buy()
+    #test_sell()
+    test_commit_sell()
+
