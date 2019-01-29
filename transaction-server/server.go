@@ -24,6 +24,7 @@ var (
 	})
 )
 
+// Test connection to Redis
 func RedisClient() {
 	err := cache.Set("key", "value", 0).Err()
 	if err != nil {
@@ -66,6 +67,7 @@ func loadDb() *sql.DB {
 	return db
 }
 
+// Tested
 func addHandler(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
@@ -107,6 +109,7 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Tested
 func buyHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
@@ -167,6 +170,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Tested
 func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
@@ -207,6 +211,7 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Tested
 func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
@@ -220,6 +225,7 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 	cache.LPop(req.UserID + ":buy")
 }
 
+// Tested
 func sellHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
@@ -272,6 +278,7 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Tested
 func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
@@ -309,6 +316,7 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Tested
 func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
@@ -322,6 +330,7 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 	cache.LPop(req.UserID + ":sell")
 }
 
+// Tested
 func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
@@ -351,14 +360,42 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Tested
 func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+
+	req := struct {
+		UserID string
+		Symbol string
+	}{"", ""}
+
+	// Parse request parameters into struct
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	queryString1 := "DELETE FROM buy_amounts WHERE user_id = $1 AND symbol = $2;"
+
+	queryString2 := "DELETE FROM triggers WHERE user_id = $1 AND symbol = $2 AND method = 'buy';"
+
+	rows1, err := db.Query(queryString1, req.UserID, req.Symbol)
+	failOnError(err, "Failed to delete buy amount")
+
+	defer rows1.Close()
+
+	rows2, err := db.Query(queryString2, req.UserID, req.Symbol)
+	failOnError(err, "Failed to delete trigger")
+
+	defer rows2.Close()
 
 }
 
+// TODO: Every 60 seconds, see if price is cached. If it is, check it against triggers. If it's not and there's a trigger
+// that exists, get quote for that stock and evaluate trigger.
 func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Tested
 func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
@@ -405,7 +442,6 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	RedisClient()
 	port := ":8080"
 	http.HandleFunc("/add", addHandler)
 	http.HandleFunc("/quote", quoteHandler)
