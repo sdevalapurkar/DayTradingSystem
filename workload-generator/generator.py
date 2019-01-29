@@ -1,11 +1,11 @@
+import sys
 import requests
 import re
 
-lines = [line.rstrip('\n') for line in open('1_user.txt')]
+lines = [line.rstrip('\n') for line in open(sys.argv[1])]
 lines = [re.sub('^[[0-9]*]\s', '', line) for line in lines]
 
 for line in lines:
-  print(line)
   commands = [command.strip() for command in line.split(',')]
   command_type = commands.pop(0)
 
@@ -25,9 +25,9 @@ for line in lines:
       'user_id': commands[0],
       'amount': commands[1]
     }
-    print(command_dict)
+    #print(command_dict)
     r = requests.put('http://localhost:8009/api/{}'.format(command_type), data=command_dict)
-
+  
   # POST
   else:
     if command_type in ('BUY', 'SELL', 'SET_BUY_AMOUNT', 'SET_BUY_TRIGGER', 'SET_SELL_AMOUNT', 'SET_SELL_TRIGGER'):
@@ -46,4 +46,4 @@ for line in lines:
         'user_id': commands[0],
       }
     r = requests.post('http://localhost:8009/api/{}'.format(command_type), data=command_dict)
-
+  print(r.text)
