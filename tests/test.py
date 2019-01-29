@@ -127,6 +127,12 @@ def test_cancel_set_sell():
     r = requests.post(URL_ROOT + '/cancel_set_sell', json=data)
 
 
+def test_quote_handler():
+    data = {
+        'userID': '69',
+        'symbol': 'abc'
+    }
+    r = requests.post(URL_ROOT + '/quote', json=data)
 
 
 if __name__ == '__main__':
@@ -142,4 +148,5 @@ if __name__ == '__main__':
     #test_cancel_set_buy()
     #test_set_buy_trigger()
     #test_set_sell_trigger()
-    test_cancel_set_sell()
+    #test_cancel_set_sell()
+    test_quote_handler()
