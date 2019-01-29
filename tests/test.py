@@ -78,6 +78,7 @@ def test_set_buy_amount():
 
     r = requests.post(URL_ROOT + '/set_buy_amount', json=data)
 
+
 def test_set_sell_amount():
     data = {
         'userID': '69',
@@ -86,6 +87,26 @@ def test_set_sell_amount():
     }
 
     r = requests.post(URL_ROOT + '/set_sell_amount', json=data)
+
+
+def test_cancel_set_buy():
+    data = {
+        'userID': '69',
+        'symbol': 'abc'
+    }
+
+    r = requests.post(URL_ROOT + '/cancel_set_buy', json=data)
+
+
+def test_set_buy_trigger():
+    data = {
+        'userID': '69',
+        'symbol': 'abc',
+        'price': 69
+    }
+
+    r = requests.post(URL_ROOT + '/set_buy_trigger', json=data)
+
 
 if __name__ == '__main__':
     
@@ -96,4 +117,6 @@ if __name__ == '__main__':
     #test_commit_sell()
     #test_cancel_buy()
     #test_set_buy_amount()
-    test_set_sell_amount()
+    #test_set_sell_amount()
+    #test_cancel_set_buy()
+    test_set_buy_trigger()
