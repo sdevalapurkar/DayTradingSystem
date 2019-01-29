@@ -392,7 +392,30 @@ func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
 // TODO: Every 60 seconds, see if price is cached. If it is, check it against triggers. If it's not and there's a trigger
 // that exists, get quote for that stock and evaluate trigger.
 func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		UserID string
+		Symbol string
+		Price  float64
+	}{"", "", 0.0}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	queryString := "INSERT INTO triggers (user_id, symbol, price, method) VALUES ($1, $2, $3, 'buy') " +
+		"ON CONFLICT (user_id, symbol, method) DO UPDATE SET price = $3;"
+
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare query statement")
+
+	res, err := stmt.Exec(req.UserID, req.Symbol, req.Price)
+	failOnError(err, "Failed to add trigger")
+
+	numrows, err := res.RowsAffected()
+	if numrows < 1 {
+		failOnError(err, "Failed to add trigger")
+	}
 }
 
 // Tested
