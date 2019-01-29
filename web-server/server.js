@@ -104,7 +104,7 @@ app.post('/api/SELL', function(req, res) {
   console.log('Sell endpoint');
   if (req.body.amount < 0) {
     res.send('Cannot add negative value')
-  } else {  
+  } else {
     rp({
       method: 'POST',
       uri: 'http://localhost:8008/api/SELL',
