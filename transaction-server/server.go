@@ -12,13 +12,14 @@ import (
 	_ "github.com/herenow/go-crate"
 )
 
-var host = "http://192.168.99.100"
+//var host = "http://192.168.99.100"
+var host = "http://localhost"
 
 var (
 	dbstring = host + ":4200/"
 	db       = loadDb()
 	cache    = redis.NewClient(&redis.Options{
-		Addr:     "192.168.99.100:6379",
+		Addr:     "localhost:6379",
 		Password: "",
 		DB:       0,
 	})
@@ -448,12 +449,60 @@ func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Tested
 func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		UserID string
+		Symbol string
+		Price  float64
+	}{"", "", 0.0}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	queryString := "INSERT INTO triggers (user_id, symbol, price, method) VALUES ($1, $2, $3, 'sell') " +
+		"ON CONFLICT (user_id, symbol, method) DO UPDATE SET price = $3;"
+
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare query statement")
+
+	res, err := stmt.Exec(req.UserID, req.Symbol, req.Price)
+	failOnError(err, "Failed to add sell trigger")
+
+	numrows, err := res.RowsAffected()
+	if numrows < 1 {
+		failOnError(err, "Failed to add sell trigger")
+	}
 }
 
+// Tested
 func cancelSetSellHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		UserID string
+		Symbol string
+	}{"", ""}
+
+	// Parse request parameters into struct
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	queryString1 := "DELETE FROM sell_amounts WHERE user_id = $1 AND symbol = $2;"
+
+	queryString2 := "DELETE FROM triggers WHERE user_id = $1 AND symbol = $2 AND method = 'sell';"
+
+	rows1, err := db.Query(queryString1, req.UserID, req.Symbol)
+	failOnError(err, "Failed to delete sell amount")
+
+	defer rows1.Close()
+
+	rows2, err := db.Query(queryString2, req.UserID, req.Symbol)
+	failOnError(err, "Failed to delete sell trigger")
+
+	defer rows2.Close()
 }
 
 func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
