@@ -106,8 +106,22 @@ func getQuote(symbol string) float64 {
 }
 
 func quoteHandler(w http.ResponseWriter, r *http.Request) {
-	//decoder := json.NewDecoder(r.Body)
+	decoder := json.NewDecoder(r.Body)
 
+	// Parse request into struct
+	req := struct {
+		UserID string
+		Symbol string
+	}{"", ""}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	// Get quote for the requested stock symbol
+	quote := getQuote(req.Symbol)
+
+	// Return UserID, Symbol, and stock quote in comma-delimited string
+	w.Write([]byte(req.UserID + "," + req.Symbol + "," + strconv.FormatFloat(quote, 'f', -1, 64)))
 }
 
 // Tested
@@ -387,7 +401,6 @@ func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to delete trigger")
 
 	defer rows2.Close()
-
 }
 
 // TODO: Every 60 seconds, see if price is cached. If it is, check it against triggers. If it's not and there's a trigger
