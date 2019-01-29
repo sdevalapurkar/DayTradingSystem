@@ -11,7 +11,7 @@ import (
 
 var (
 	dbstring = "http://localhost:4200/"
-	db       = loadDb()
+	db       = loadDb(dbstring)
 )
 
 func failOnError(err error, msg string) {
@@ -21,7 +21,7 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func loadDb() *sql.DB {
+func loadDb(dbstring string) *sql.DB {
 	db, err := sql.Open("crate", dbstring)
 
 	// If can't connect to DB
@@ -31,6 +31,10 @@ func loadDb() *sql.DB {
 
 	return db
 }
+
+// func logEvent() bool {
+
+// }
 
 func addHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
@@ -44,7 +48,6 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
 
-	
 	// Insert new user if they don't already exist, otherwise update their balance
 	queryString := "INSERT INTO users (user_id, balance) VALUES ($1, $2)" +
 		"ON CONFLICT (user_id) DO UPDATE SET balance = balance + $2"
@@ -64,11 +67,9 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	//w.WriteHeader(http.StatusOK)
 }
 
-
-func getQuote (symbol string) float64 {
+func getQuote(symbol string) float64 {
 	return 50.0
 }
-
 
 func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	//decoder := json.NewDecoder(r.Body)
@@ -90,7 +91,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get price of requested stock
 	price := getQuote(req.Symbol)
-	
+
 	// Calculate total cost to buy given amount of given stock
 	cost := price * req.Amount
 
@@ -116,13 +117,13 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		queryString = "UPDATE users SET balance = balance - $1 WHERE user_id = $2"
 		stmt, err := db.Prepare(queryString)
 		failOnError(err, "Failed to prepare withdraw query")
-		
+
 		// Withdraw funds from user's account
 		res, err := stmt.Exec(balance, req.UserID)
 		failOnError(err, "Failed to withdraw money from user account")
 
 		queryString = "INSERT INTO stocks (quantity, symbol, user_id) VALUES ($1, $2, $3) " +
-						"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $1;"
+			"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $1;"
 		stmt, err = db.Prepare(queryString)
 		failOnError(err, "Failed to prepare query")
 
@@ -135,11 +136,10 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-    // # If they do, buy them
-    // #       reduce user balance
-    // #       increase user stock balance
+	// # If they do, buy them
+	// #       reduce user balance
+	// #       increase user stock balance
 	// # If they don't, return 'nah g'
-	
 
 	// Charge user account
 
