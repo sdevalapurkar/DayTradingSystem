@@ -101,7 +101,21 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	//w.WriteHeader(http.StatusOK)
 }
 
+// Tested
 func getQuote(symbol string) float64 {
+	// Check if symbol is in cache
+	quote, err := cache.Get(symbol).Result()
+	
+	if err == redis.Nil {
+		// Get quote from the quote server and store it with ttl 60s
+		cache.Set(symbol, "50.0", 60000000000)
+		return 50.0
+	} else {
+		// Otherwise, return the cached value
+		quote, err := strconv.ParseFloat(quote, 32)
+		failOnError(err, "Failed to parse float from quote")
+		return quote
+	}
 	return 50.0
 }
 
