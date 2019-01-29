@@ -323,7 +323,32 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		UserID string
+		Symbol string
+		Amount int
+	}{"", "", 0}
+
+	// Parse request into struct
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	// Add buy amount to user's account. If a buy amount already exists for the requested stock, add this to it
+	queryString := "INSERT INTO buy_amounts (user_id, symbol, quantity) VALUES ($1, $2, $3) " +
+		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $3;"
+
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare query")
+
+	res, err := stmt.Exec(req.UserID, req.Symbol, req.Amount)
+	failOnError(err, "Failed to update buy amount")
+
+	numrows, err := res.RowsAffected()
+	if numrows < 1 {
+		failOnError(err, "Failed to update buy amount")
+	}
 }
 
 func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
@@ -335,7 +360,32 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		UserID string
+		Symbol string
+		Amount int
+	}{"", "", 0}
+
+	// Parse request into struct
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse request")
+
+	// Add buy amount to user's account. If a buy amount already exists for the requested stock, add this to it
+	queryString := "INSERT INTO sell_amounts (user_id, symbol, quantity) VALUES ($1, $2, $3) " +
+		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $3;"
+
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare query")
+
+	res, err := stmt.Exec(req.UserID, req.Symbol, req.Amount)
+	failOnError(err, "Failed to update sell amount")
+
+	numrows, err := res.RowsAffected()
+	if numrows < 1 {
+		failOnError(err, "Failed to update sell amount")
+	}
 }
 
 func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
@@ -353,6 +403,7 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 
 }
+
 func main() {
 	RedisClient()
 	port := ":8080"
