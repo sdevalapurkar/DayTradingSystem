@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	_ "github.com/herenow/go-crate"
 )
@@ -32,7 +33,29 @@ func loadDb(dbstring string) *sql.DB {
 	return db
 }
 
+func createTimestamp() int64 {
+	return time.Now().UTC().Unix()
+}
+
 func logUserCommandHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+
+	req := struct {
+		TransactionNum int
+		Server         string
+		Command        string
+		Username       string
+		Stock          string
+		Filename       string
+		Funds          float64
+	}{0, "", "", "", "", "", 0.0}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse the request")
+
+}
+
+func logSystemEventHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
@@ -49,20 +72,55 @@ func logUserCommandHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to parse the request")
 }
 
-func logSystemEventHandler(w http.ResponseWriter, r *http.Request) {
-
-}
-
 func logQuoteServerHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		TransactionNum  int
+		Server          string
+		Action          string
+		Username        string
+		Stock           string
+		CryptoKey       string
+		QuoteServerTime int64
+		Price           float64
+	}{0, "", "", "", "", "", 0, 0.0}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse the request")
 }
 
 func logAccountTransactionHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		TransactionNum int
+		Server         string
+		Action         string
+		Username       string
+		Funds          float64
+	}{0, "", "", "", 0.0}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse the request")
 }
 
 func logErrorEventHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
 
+	req := struct {
+		TransactionNum int
+		Server         string
+		Command        string
+		Username       string
+		Stock          string
+		Filename       string
+		ErrorMessage   string
+		Funds          float64
+	}{0, "", "", "", "", "", "", 0.0}
+
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse the request")
 }
 
 func main() {
