@@ -72,7 +72,32 @@ func loadDb() *sql.DB {
 }
 
 func fireTrigger(UserID string, Symbol string, method string) {
-	queryString := ""
+
+	// Consume trigger
+	queryString := "DELETE FROM triggers WHERE user_id = $1 AND symbol = $2 AND method = $3;"
+	rows, err := db.Query(queryString, UserID, Symbol, method)
+	failOnError(err, "Failed to delete trigger after firing")
+	defer rows.Close()
+
+	whereCond := "WHERE user_id = $1 AND symbol = $2"
+
+	var quantity int
+	// Get quantity of stock to buy/sell
+	queryString = "SELECT quantity FROM " + method + "_amounts " + whereCond
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare SELECT quantity query")
+	err = stmt.QueryRow(UserID, Symbol).Scan(&quantity)
+	failOnError(err, "Failed to get quantity from "+method+"_amounts")
+
+	// Delete buy/sell amount from user's account
+	queryString = "DELETE FROM " + method + "_amounts " + whereCond
+	rows, err = db.Query(queryString, UserID, Symbol)
+	failOnError(err, "Failed to delete "+method+" amount after trigger fire")
+	defer rows.Close()
+
+	// Add/subtract the stocks to user's account
+	queryString = "INSERT INTO "
+
 }
 
 func evalTrigger(UserID string, Symbol string, method string) bool {
@@ -114,7 +139,7 @@ func monitorTrigger(UserID string, Symbol string, method string) {
 	ticker := time.NewTicker(60 * time.Second)
 
 	// Every time the ticker fires, check the trigger
-	for t := range ticker.C {
+	for range ticker.C {
 		done := evalTrigger(UserID, Symbol, method)
 		if done {
 			return
@@ -231,7 +256,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check user balance against cost of requested stock purchase
 	if balance >= cost {
-		// User has enough, do reserve the funds by pulling them from the account
+		// User has enough, reserve the funds by pulling them from the account
 		queryString = "UPDATE users SET balance = balance - $1 WHERE user_id = $2"
 		stmt, err := db.Prepare(queryString)
 		failOnError(err, "Failed to prepare withdraw query")
@@ -285,6 +310,22 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to prepare query")
 
 	res, err := stmt.Exec(tasks[1], tasks[0], req.UserID)
+	failOnError(err, "Failed to add stocks to account")
+
+	numrows, err := res.RowsAffected()
+	if numrows < 1 {
+		failOnError(err, "Failed to add stocks to account")
+	}
+}
+
+func buyStock(UserID string, Symbol string, quantity int) {
+	// Add new stocks to user's account
+	queryString := "INSERT INTO stocks (quantity, symbol, user_id) VALUES ($1, $2, $3) " +
+		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $1;"
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare query")
+
+	res, err := stmt.Exec(quantity, Symbol, UserID)
 	failOnError(err, "Failed to add stocks to account")
 
 	numrows, err := res.RowsAffected()
