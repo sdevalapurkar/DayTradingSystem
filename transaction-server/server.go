@@ -7,19 +7,22 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-redis/redis"
 	_ "github.com/herenow/go-crate"
 )
 
-//var host = "http://192.168.99.100"
-var host = "http://localhost"
+var host = "http://192.168.99.100"
+var auditServer = "http://localhost:4201"
+
+//var host = "http://localhost"
 
 var (
 	dbstring = host + ":4200/"
 	db       = loadDb()
 	cache    = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     "192.168.99.100:6379",
 		Password: "",
 		DB:       0,
 	})
@@ -68,6 +71,57 @@ func loadDb() *sql.DB {
 	return db
 }
 
+func fireTrigger(UserID string, Symbol string, method string) {
+	queryString := ""
+}
+
+func evalTrigger(UserID string, Symbol string, method string) bool {
+	queryString := "SELECT price FROM triggers WHERE symbol = $1 AND user_id = $2 and method = $3;"
+
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare query")
+
+	var triggerPrice float64
+
+	// Try to get a trigger for given user, symbol, and method
+	err = stmt.QueryRow(UserID, Symbol, method).Scan(&triggerPrice)
+
+	// If no trigger exists, stop the routine monitoring it
+	if err == sql.ErrNoRows {
+		return true
+	} else {
+		// If trigger still exists, check the value of the trigger against the price
+		quote := getQuote(Symbol)
+		diff := triggerPrice - quote
+		if method == "sell" {
+			diff *= -1.0
+		}
+		// If the difference if greater than or equal to 0, fire the trigger!
+		if diff >= 0 {
+			fireTrigger(UserID, Symbol, method)
+			return true
+		} else {
+			// The trigger still exists, but should not be fired yet so we are not done monitoring yet
+			return false
+		}
+	}
+	defer stmt.Close()
+	return false
+}
+
+func monitorTrigger(UserID string, Symbol string, method string) {
+	// Create a ticker that fires every 60 seconds
+	ticker := time.NewTicker(60 * time.Second)
+
+	// Every time the ticker fires, check the trigger
+	for t := range ticker.C {
+		done := evalTrigger(UserID, Symbol, method)
+		if done {
+			return
+		}
+	}
+}
+
 // Tested
 func addHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -105,7 +159,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 func getQuote(symbol string) float64 {
 	// Check if symbol is in cache
 	quote, err := cache.Get(symbol).Result()
-	
+
 	if err == redis.Nil {
 		// Get quote from the quote server and store it with ttl 60s
 		cache.Set(symbol, "50.0", 60000000000)
@@ -116,7 +170,6 @@ func getQuote(symbol string) float64 {
 		failOnError(err, "Failed to parse float from quote")
 		return quote
 	}
-	return 50.0
 }
 
 func quoteHandler(w http.ResponseWriter, r *http.Request) {
