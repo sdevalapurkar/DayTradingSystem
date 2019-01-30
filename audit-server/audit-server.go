@@ -27,9 +27,9 @@ func loadDb(dbstring string) *sql.DB {
 
 	// If can't connect to DB
 	failOnError(err, "Couldn't connect to CrateDB")
-	// err := db.Ping()
-	// failOnError(err, "Couldn't ping CrateDB")
-
+	err = db.Ping()
+	failOnError(err, "Couldn't ping CrateDB")
+	println("connected to db")
 	return db
 }
 
@@ -53,6 +53,8 @@ func logUserCommandHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
 
+	// res2B, _ := json.Marshal(req)
+	// fmt.Println(string(res2B))
 }
 
 func logSystemEventHandler(w http.ResponseWriter, r *http.Request) {
@@ -125,10 +127,10 @@ func logErrorEventHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	port := ":8081"
-	http.HandleFunc("logUserCommand", logUserCommandHandler)
-	http.HandleFunc("logSystemEvent", logSystemEventHandler)
-	http.HandleFunc("logQuoteServer", logQuoteServerHandler)
-	http.HandleFunc("logAccountTransaction", logAccountTransactionHandler)
-	http.HandleFunc("logErrorEvent", logErrorEventHandler)
+	http.HandleFunc("/logUserCommand", logUserCommandHandler)
+	http.HandleFunc("/logSystemEvent", logSystemEventHandler)
+	http.HandleFunc("/logQuoteServer", logQuoteServerHandler)
+	http.HandleFunc("/logAccountTransaction", logAccountTransactionHandler)
+	http.HandleFunc("/logErrorEvent", logErrorEventHandler)
 	http.ListenAndServe(port, nil)
 }
