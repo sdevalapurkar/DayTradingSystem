@@ -122,12 +122,13 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
-
+	fmt.Println(req.Symbol)
 	// Get quote for the requested stock symbol
 	quote := getQuote(req.Symbol)
 
 	// Return UserID, Symbol, and stock quote in comma-delimited string
 	w.Write([]byte(req.UserID + "," + req.Symbol + "," + strconv.FormatFloat(quote, 'f', -1, 64)))
+
 }
 
 // Tested
@@ -349,6 +350,7 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to parse request")
 
 	cache.LPop(req.UserID + ":sell")
+	w.Write([]byte("Failed to commit sell transaction: no sell orders exist"))
 }
 
 // Tested
@@ -378,6 +380,7 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 	if numrows < 1 {
 		failOnError(err, "Failed to update buy amount")
 	}
+
 }
 
 // Tested

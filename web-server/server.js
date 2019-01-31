@@ -1,19 +1,300 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const rp = require('request-promise');
 const app = express();
-const port = 8009;
-
+const port = 8123;
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
 app.use(bodyParser.json());
 
-app.get('/api/QUOTE', function(req, res) {
-  console.log(req.query)
-  console.log('hey we are hitting the get endpoint!!');
+app.post('/quote', function(req, res) {
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8080/quote',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
+  res.send('hey');
+});
+
+app.post('/add', function(req, res) {
+  if (req.body.amount < 0) {
+    res.send('Cannot add negative value')
+  } else {
+    rp({
+      method: 'POST',
+      uri: 'http://localhost:8080/add',
+      body: req.body,
+      json: true
+    })
+      .then(data => {
+        console.log('data is ', data);
+      })
+      .catch(err => {
+        console.log('err is', err);
+      })
+    res.send('hey')
+  }
+});
+
+app.post('/buy', function(req, res) {
+  console.log('Buy endpoint');
+  if (req.body.amount < 0) {
+    res.send('Cannot add negative value')
+  } else {
+    rp({
+      method: 'POST',
+      uri: 'http://localhost:8080/buy',
+      body: req.body,
+      json: true
+    })
+      .then(data => {
+        console.log('data is ', data);
+      })
+      .catch(err => {
+        console.log('err is', err);
+      })
+    res.send('hey')
+  }
+});
+
+app.post('/commit_buy', function(req, res) {
+  console.log('Commit Buy endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8080/commit_buy',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey')
 });
 
-app.put('/api/ADD', function(req, res) {
-  console.log(req.body);
-  console.log('hey we are hitting the post endpoint');
+app.post('/cancel_buy', function(req, res) {
+  console.log('Cancel buy endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8080/cancel_buy',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
+  res.send('hey')
+});
+
+app.post('/sell', function(req, res) {
+  console.log('Sell endpoint');
+  if (req.body.amount < 0) {
+    res.send('Cannot add negative value')
+  } else {
+    rp({
+      method: 'POST',
+      uri: 'http://localhost:8080/sell',
+      body: req.body,
+      json: true
+    })
+      .then(data => {
+        console.log('data is ', data);
+      })
+      .catch(err => {
+        console.log('err is', err);
+      })
+    res.send('hey')
+  }
+});
+
+app.post('/commit_sell', function(req, res) {
+  console.log('Commit sell endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8080/commit_sell',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
+  res.send('hey')
+});
+
+app.post('/cancel_sell', function(req, res) {
+  console.log('Cancel sell endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8080/cancel_sell',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
+  res.send('hey')
+});
+
+app.post('/set_buy_amount', function(req, res) {
+  console.log('Set buy amount endpoint');
+  if (req.body.amount < 0) {
+    res.send('Cannot add negative value')
+  } else {
+    rp({
+      method: 'POST',
+      uri: 'http://localhost:8080/set_buy_amount',
+      body: req.body,
+      json: true
+    })
+      .then(data => {
+        console.log('data is ', data);
+      })
+      .catch(err => {
+        console.log('err is', err);
+      })
+    res.send('hey')
+  }
+});
+
+app.post('/cancel_set_buy', function(req, res) {
+  console.log('Cancel set buy endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8080/cancel_set_buy',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
+  res.send('hey')
+});
+
+app.post('/set_buy_trigger', function(req, res) {
+  console.log('Set sell trigger endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8080/set_buy_trigger',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
+  res.send('hey')
+});
+
+app.post('/set_sell_amount', function(req, res) {
+  console.log('Set sell amount endpoint');
+  if (req.body.amount < 0) {
+    res.send('Cannot add negative value')
+  } else {
+    rp({
+      method: 'POST',
+      uri: 'http://localhost:8080/set_sell_amount',
+      body: req.body,
+      json: true
+    })
+      .then(data => {
+        console.log('data is ', data);
+      })
+      .catch(err => {
+        console.log('err is', err);
+      })
+    res.send('hey')
+  }
+});
+
+app.post('/set_sell_trigger', function(req, res) {
+  console.log('Set sell trigger endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8080/set_sell_trigger',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
+  res.send('hey')
+});
+
+app.post('/cancel_set_sell', function(req, res) {
+  console.log('Cancel set sell endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8080/cancel_set_sell',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
+  res.send('hey')
+});
+
+app.post('/dumplog', function(req, res) {
+  console.log('Dumplog endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8080/dumplog',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
+  res.send('hey')
+});
+
+app.post('/display_summary', function(req, res) {
+  console.log('Display summary endpoint');
+  rp({
+    method: 'POST',
+    uri: 'http://localhost:8080/display_summary',
+    body: req.body,
+    json: true
+  })
+    .then(data => {
+      console.log('data is ', data);
+    })
+    .catch(err => {
+      console.log('err is', err);
+    })
   res.send('hey')
 });
 
