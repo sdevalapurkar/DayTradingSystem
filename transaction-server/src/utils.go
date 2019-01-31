@@ -44,19 +44,20 @@ func getQuote(symbol string) float64 {
 		decoder := json.NewDecoder(r.Body)
 
 		res := struct {
+			Cyrptokey string
 			Quote float64
-		}{0.0}
+		}{"", 0.0}
 
 		err = decoder.Decode(&res)
 		failOnError(err, "Failed to parse quote server response data")
 
 		cache.Set(symbol, strconv.FormatFloat(res.Quote, 'f', -1, 64), 60000000000)
-		return 50.0
+		return res
 	} else {
 		// Otherwise, return the cached value
 		quote, err := strconv.ParseFloat(quote, 32)
 		failOnError(err, "Failed to parse float from quote")
-		return quote
+		return res
 	}
 }
 
