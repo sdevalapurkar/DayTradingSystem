@@ -76,39 +76,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	if numrows < 1 {
 		failOnError(err, "Failed to add balance")
 	}
-
 	//w.WriteHeader(http.StatusOK)
-}
-
-// Tested
-func getQuote(symbol string) float64 {
-	// Check if symbol is in cache
-	quote, err := cache.Get(symbol).Result()
-
-	if err == redis.Nil {
-		// Get quote from the quote server and store it with ttl 60s
-		r, err := http.Get("http://localhost:3000/quote")
-		failOnError(err, "Failed to retrieve quote from quote server")
-		defer r.Body.Close()
-
-		failOnError(err, "Failed to parse quote server response")
-		decoder := json.NewDecoder(r.Body)
-
-		res := struct {
-			Quote float64
-		}{0.0}
-
-		err = decoder.Decode(&res)
-		failOnError(err, "Failed to parse quote server response data")
-
-		cache.Set(symbol, strconv.FormatFloat(res.Quote, 'f', -1, 64), 60000000000)
-		return 50.0
-	} else {
-		// Otherwise, return the cached value
-		quote, err := strconv.ParseFloat(quote, 32)
-		failOnError(err, "Failed to parse float from quote")
-		return quote
-	}
 }
 
 // Tested
@@ -130,7 +98,6 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Return UserID, Symbol, and stock quote in comma-delimited string
 	w.Write([]byte(req.UserID + "," + req.Symbol + "," + strconv.FormatFloat(quote, 'f', -1, 64)))
-
 }
 
 // Tested
