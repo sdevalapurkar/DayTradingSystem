@@ -41,62 +41,67 @@ func createTimestamp() int64 {
 }
 
 // UserCommand data type
-type userCommand struct {
-	Timestamp      string `xml:"timestamp"`
-	Server         string `xml:"server"`
-	TransactionNum string `xml:"transactionNum"`
-	Command        string `xml:"command"`
-	Username       string `xml:"username"`
-	StockSymbol    string `xml:"stockSymbol"`
-	Filename       string `xml:"filename"`
-	Funds          string `xml:"funds"`
+type UserCommand struct {
+	XMLName        xml.Name `xml:"userCommand"`
+	Timestamp      string   `xml:"timestamp"`
+	Server         string   `xml:"server"`
+	TransactionNum string   `xml:"transactionNum"`
+	Command        string   `xml:"command"`
+	Username       string   `xml:"username,omitempty"`
+	StockSymbol    string   `xml:"stockSymbol,omitempty"`
+	Filename       string   `xml:"filename,omitempty"`
+	Funds          string   `xml:"funds,omitempty"`
 }
 
 // SystemEvent data type
 type SystemEvent struct {
-	Timestamp      string  `xml:"timestamp"`
-	Server         string  `xml:"server"`
-	TransactionNum int     `xml:"transactionNum"`
-	Command        string  `xml:"command"`
-	Username       string  `xml:"username"`
-	StockSymbol    string  `xml:"stockSymbol"`
-	Filename       string  `xml:"filename"`
-	Funds          float64 `xml:"funds"`
+	XMLName        xml.Name `xml:"systemEvent"`
+	Timestamp      string   `xml:"timestamp"`
+	Server         string   `xml:"server"`
+	TransactionNum int      `xml:"transactionNum"`
+	Command        string   `xml:"command"`
+	Username       string   `xml:"username,omitempty"`
+	StockSymbol    string   `xml:"stockSymbol,omitempty"`
+	Filename       string   `xml:"filename,omitempty"`
+	Funds          float64  `xml:"funds,omitempty"`
 }
 
 // QuoteServer data type
 type QuoteServer struct {
-	Timestamp       string `xml:"timestamp"`
-	Server          string `xml:"server"`
-	TransactionNum  int    `xml:"transactionNum"`
-	Price           int    `xml:"price"`
-	StockSymbol     string `xml:"stockSymbol"`
-	Username        string `xml:"username"`
+	XMLName         xml.Name `xml:"quoteServer"`
+	Timestamp       string   `xml:"timestamp"`
+	Server          string   `xml:"server"`
+	TransactionNum  int      `xml:"transactionNum"`
+	Price           int      `xml:"price"`
+	StockSymbol     string   `xml:"stockSymbol"`
+	Username        string   `xml:"username"`
 	QuoteServerTime int
 	CryptoKey       string
 }
 
 // AccountTransaction data type
 type AccountTransaction struct {
-	Timestamp      string  `xml:"timestamp"`
-	Server         string  `xml:"server"`
-	TransactionNum int     `xml:"transactionNum"`
-	Action         string  `xml:"action"`
-	Username       string  `xml:"username"`
-	Funds          float64 `xml:"funds"`
+	XMLName        xml.Name `xml:"accountTransaction"`
+	Timestamp      string   `xml:"timestamp"`
+	Server         string   `xml:"server"`
+	TransactionNum int      `xml:"transactionNum"`
+	Action         string   `xml:"action"`
+	Username       string   `xml:"username"`
+	Funds          float64  `xml:"funds"`
 }
 
 // ErrorEvent data type
 type ErrorEvent struct {
-	Timestamp      string  `xml:"timestamp"`
-	Server         string  `xml:"server"`
-	TransactionNum int     `xml:"transactionNum"`
-	Command        string  `xml:"command"`
-	Username       string  `xml:"username"`
-	StockSymbol    string  `xml:"stockSymbol"`
-	Filename       string  `xml:"filename"`
-	Funds          float64 `xml:"funds"`
-	ErrorMessage   string  `xml:errorMessage`
+	XMLName        xml.Name `xml:"errorEvent"`
+	Timestamp      string   `xml:"timestamp"`
+	Server         string   `xml:"server"`
+	TransactionNum int      `xml:"transactionNum"`
+	Command        string   `xml:"command"`
+	Username       string   `xml:"username,omitempty"`
+	StockSymbol    string   `xml:"stockSymbol,omitempty"`
+	Filename       string   `xml:"filename,omitempty"`
+	Funds          float64  `xml:"funds,omitempty"`
+	ErrorMessage   string   `xml:"errorMessage,omitempty"`
 }
 
 func logUserCommandHandler(w http.ResponseWriter, r *http.Request) {
@@ -295,17 +300,17 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to prepare query")
 	defer rows.Close()
 
-	userCommandArray := []userCommand{}
+	logs := []interface{}{}
 
 	for rows.Next() {
-		uc := userCommand{}
+		uc := UserCommand{}
 
 		if err := rows.Scan(&uc.Command, &uc.Filename, &uc.Funds, &uc.Server,
 			&uc.StockSymbol, &uc.Timestamp, &uc.TransactionNum, &uc.Username); err != nil {
 			log.Fatal(err)
 		}
 
-		userCommandArray = append(userCommandArray, uc)
+		logs = append(logs, uc)
 	}
 
 	// Write to file
@@ -313,7 +318,7 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "File couldn't be created")
 	defer file.Close()
 
-	for _, uc := range userCommandArray {
+	for _, uc := range logs {
 
 		test, err := xml.MarshalIndent(uc, "  ", "    ")
 		if err != nil {
