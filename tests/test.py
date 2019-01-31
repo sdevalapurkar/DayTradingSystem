@@ -64,8 +64,15 @@ def test_commit_sell():
     data = {
         'userID': '69'
     }
-    
+
     r = requests.post(URL_ROOT + '/commit_sell', json=data)
+
+def test_cancel_sell():
+    data = {
+        'userID': '69'
+    }
+
+    r = requests.post(URL_ROOT + '/cancel_sell', json=data)
 
 
 def test_set_buy_amount():
@@ -126,26 +133,55 @@ def test_cancel_set_sell():
     r = requests.post(URL_ROOT + '/cancel_set_sell', json=data)
 
 
+def test_user_dumplog():
+    data = {
+        'userID': '69',
+        'filename': 'user_dumplog'
+    }
+
+    r = requests.post(URL_ROOT + '/dumplog', json=data)
+
+
+def test_system_dumplog():
+    data = {
+        'filename': 'system_dumplog',
+    }
+
+    r = requests.post(URL_ROOT + '/dumplog', json=data)
+
+
+def test_display_summary():
+    data = {
+        'userID': '69'
+    }
+
+    r = requests.post(URL_ROOT + '/display_summary', json=data)
+
+
 def test_quote_handler():
     data = {
         'userID': '69',
         'symbol': 'abc'
     }
-    r = requests.post(URL_ROOT + '/api/QUOTE', json=data)
+    r = requests.post(URL_ROOT + '/quote', json=data)
 
 
 if __name__ == '__main__':
-    
-    #test_add()
-    #test_buy()
-    #test_commit_buy()
-    #test_sell()
-    #test_commit_sell()
-    #test_cancel_buy()
-    #test_set_buy_amount()
-    #test_set_sell_amount()
-    #test_cancel_set_buy()
-    #test_set_buy_trigger()
-    #test_set_sell_trigger()
-    #test_cancel_set_sell()
+
+    # test_add()
+    # test_buy()
+    # test_commit_buy()
+    # test_sell()
+    # test_commit_sell()
+    # test_cancel_sell()
+    # test_cancel_buy()
+    # test_set_buy_amount()
+    # test_set_sell_amount()
+    # test_cancel_set_buy()
+    # test_set_buy_trigger()
+    # test_set_sell_trigger()
+    # test_cancel_set_sell()
+    # test_user_dumplog()
+    # test_system_dumplog()
+    # test_quote_handler()
     test_quote_handler()
