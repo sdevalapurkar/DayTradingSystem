@@ -27,26 +27,26 @@ var (
 	})
 )
 
-// Test connection to Redis
-func RedisClient() {
-	err := cache.Set("key", "value", 0).Err()
-	if err != nil {
-		panic(err)
-	}
+// // Test connection to Redis
+// func RedisClient() {
+// 	err := cache.Set("key", "value", 0).Err()
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	val, err := cache.Get("key").Result()
-	if err != nil {
-		panic(err)
-	}
-	val2, err := cache.Get("key2").Result()
-	if err == redis.Nil {
-		fmt.Println("key2 does not exist")
-	} else if err != nil {
-		panic(err)
-	} else {
-		fmt.Println("key2", val2)
-	}
-}
+// 	val, err := cache.Get("key").Result()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	val2, err := cache.Get("key2").Result()
+// 	if err == redis.Nil {
+// 		fmt.Println("key2 does not exist")
+// 	} else if err != nil {
+// 		panic(err)
+// 	} else {
+// 		fmt.Println("key2", val2)
+// 	}
+// }
 
 // Tested
 func addHandler(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +55,8 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	req := struct {
 		UserID  string
 		Balance float64
-	}{"", 0.0}
+		TransactionNum int
+	}{"", 0.0, 0}
 
 	// Read request json into struct
 	err := decoder.Decode(&req)
@@ -118,7 +119,8 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	req := struct {
 		UserID string
 		Symbol string
-	}{"", ""}
+		TransactionNum int
+	}{"", "", 0}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
@@ -139,14 +141,15 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		UserID string
 		Amount float64
 		Symbol string
-	}{"", 0.0, ""}
+		TransactionNum int
+	}{"", 0.0, "", 0}
 
 	// Read request json data into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
 
 	// Get price of requested stock
-	price := getQuote(req.Symbol)=
+	price := getQuote(req.Symbol)
 	// Calculate total cost to buy given amount of given stock
 	buy_number := int(req.Amount / price)
 	cost := float64(buy_number) * price
@@ -191,7 +194,8 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := struct {
 		UserID string
-	}{""}
+		TransactionNum int
+	}{"", 0}
 
 	// Parse request parameters into struct (just user_id)
 	err := decoder.Decode(&req)
@@ -232,7 +236,8 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := struct {
 		UserID string
-	}{""}
+		TransactionNum int
+	}{"", 0}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
@@ -248,7 +253,8 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 		UserID string
 		Amount float64 // Dollar value to sell
 		Symbol string
-	}{"", 0, ""}
+		TransactionNum int
+	}{"", 0, "", 0}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
@@ -298,7 +304,8 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := struct {
 		UserID string
-	}{""}
+		TransactionNum int
+	}{"", 0}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
@@ -344,7 +351,8 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := struct {
 		UserID string
-	}{""}
+		TransactionNum int
+	}{"", 0}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
@@ -361,7 +369,8 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 		UserID string   // id of the user buying
 		Symbol string   // symbol of the stock to buy
 		Amount int		// number of stocks to buy
-	}{"", "", 0}
+		TransactionNum int
+	}{"", "", 0, 0}
 
 	// Parse request into struct
 	err := decoder.Decode(&req)
@@ -390,7 +399,8 @@ func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
 	req := struct {
 		UserID string
 		Symbol string
-	}{"", ""}
+		TransactionNum int
+	}{"", "", 0}
 
 	// Parse request parameters into struct
 	err := decoder.Decode(&req)
@@ -417,7 +427,8 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 		UserID string
 		Symbol string
 		Price  float64
-	}{"", "", 0.0}
+		TransactionNum int
+	}{"", "", 0.0, 0}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
@@ -449,7 +460,8 @@ func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 		UserID string
 		Symbol string
 		Amount int
-	}{"", "", 0}
+		TransactionNum int
+	}{"", "", 0, 0}
 
 	// Parse request into struct
 	err := decoder.Decode(&req)
@@ -479,7 +491,8 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 		UserID string
 		Symbol string
 		Price  float64
-	}{"", "", 0.0}
+		TransactionNum int
+	}{"", "", 0.0, 0}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
@@ -509,7 +522,8 @@ func cancelSetSellHandler(w http.ResponseWriter, r *http.Request) {
 	req := struct {
 		UserID string
 		Symbol string
-	}{"", ""}
+		TransactionNum int
+	}{"", "", 0}
 
 	// Parse request parameters into struct
 	err := decoder.Decode(&req)

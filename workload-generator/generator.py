@@ -10,7 +10,7 @@ for line in lines:
   command_type = commands.pop(1)
 
   command_dict = {
-    # 'transaction_num': commands[0][1:-1],
+    'transactionNum': commands[0][1:-1],
   }
   if command_type == 'ADD':
     command_dict.update({
