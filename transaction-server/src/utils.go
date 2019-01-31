@@ -2,7 +2,16 @@ package main
 
 import (
 	"fmt"
+	"database/sql"
 )
+
+// Connects to the database
+func loadDb() *sql.DB {
+	db, err := sql.Open("crate", dbstring)
+	// If can't connect to DB
+	failOnError(err, "Couldn't connect to CrateDB")
+	return db
+}
 
 // Checks and panics on error
 // Parameters:
