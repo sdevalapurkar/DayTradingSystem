@@ -337,7 +337,7 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 
 		logs = append(logs, logEvent)
 	}
-	fmt.Println("here2")
+
 	// Get systemevents
 	queryString = "SELECT * FROM system_events"
 
@@ -362,7 +362,7 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 	rows, err = db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
 	defer rows.Close()
-	fmt.Println("here3")
+
 	for rows.Next() {
 		logEvent := QuoteServer{}
 
@@ -373,7 +373,7 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 
 		logs = append(logs, logEvent)
 	}
-	fmt.Println("here4")
+
 	// Get accounttransactions
 	queryString = "SELECT * FROM account_transactions"
 
@@ -391,7 +391,7 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 
 		logs = append(logs, logEvent)
 	}
-	fmt.Println("here5")
+
 	// Get errorevents
 	queryString = "SELECT * FROM error_events"
 
@@ -409,7 +409,6 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 
 		logs = append(logs, logEvent)
 	}
-	fmt.Println("here6")
 
 	// Sort by timestamp
 	sort.Slice(logs, func(i, j int) bool {
@@ -429,20 +428,7 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("wrote %d bytes\n", n1)
 
 	failOnError(err, "Failed to write log files to XML")
-	// for _, logEvent := range logs {
 
-	// 	test, err := xml.MarshalIndent(logEvent, "  ", "    ")
-	// 	if err != nil {
-	// 		fmt.Printf("error: %v\n", err)
-	// 	}
-
-	// 	n1, err := file.Write(test)
-	// 	fmt.Printf("wrote %d bytes\n", n1)
-
-	// 	failOnError(err, "Failed to write log files to XML")
-	// }
-
-	// os.Stdout.Write(test)
 }
 
 func dumpUserLog(w http.ResponseWriter, r *http.Request) {
