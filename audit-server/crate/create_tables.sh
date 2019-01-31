@@ -22,7 +22,6 @@ crash -c "CREATE TABLE IF NOT EXISTS quote_server_events(
             timestamp INT,
 	    transaction_num INT,
 	    server STRING,
-	    action STRING,	    
 	    user_id STRING,	  
             stock STRING,  
             crypto_key STRING,
@@ -31,13 +30,15 @@ crash -c "CREATE TABLE IF NOT EXISTS quote_server_events(
         );"
 crash -c "CREATE TABLE IF NOT EXISTS account_transactions(
 	    timestamp INT,
+	    server STRING,
 	    transaction_num INT, 
-            user_id STRING,
-	    action STRING,
+            action STRING,
+	    user_id STRING,
             funds FLOAT  
         );"
 crash -c "CREATE TABLE IF NOT EXISTS error_events(
 	    timestamp INT,
+	    server STRING,
 	    transaction_num INT,
             user_id STRING,
             stock STRING,

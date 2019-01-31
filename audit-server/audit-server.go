@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"time"
 
 	_ "github.com/herenow/go-crate"
@@ -43,20 +44,7 @@ func createTimestamp() int64 {
 // UserCommand data type
 type UserCommand struct {
 	XMLName        xml.Name `xml:"userCommand"`
-	Timestamp      string   `xml:"timestamp"`
-	Server         string   `xml:"server"`
-	TransactionNum string   `xml:"transactionNum"`
-	Command        string   `xml:"command"`
-	Username       string   `xml:"username,omitempty"`
-	StockSymbol    string   `xml:"stockSymbol,omitempty"`
-	Filename       string   `xml:"filename,omitempty"`
-	Funds          string   `xml:"funds,omitempty"`
-}
-
-// SystemEvent data type
-type SystemEvent struct {
-	XMLName        xml.Name `xml:"systemEvent"`
-	Timestamp      string   `xml:"timestamp"`
+	Timestamp      int      `xml:"timestamp"`
 	Server         string   `xml:"server"`
 	TransactionNum int      `xml:"transactionNum"`
 	Command        string   `xml:"command"`
@@ -66,23 +54,48 @@ type SystemEvent struct {
 	Funds          float64  `xml:"funds,omitempty"`
 }
 
+func (uc UserCommand) GetTimestamp() int {
+	return uc.Timestamp
+}
+
+// SystemEvent data type
+type SystemEvent struct {
+	XMLName        xml.Name `xml:"systemEvent"`
+	Timestamp      int      `xml:"timestamp"`
+	Server         string   `xml:"server"`
+	TransactionNum int      `xml:"transactionNum"`
+	Command        string   `xml:"command"`
+	Username       string   `xml:"username,omitempty"`
+	StockSymbol    string   `xml:"stockSymbol,omitempty"`
+	Filename       string   `xml:"filename,omitempty"`
+	Funds          float64  `xml:"funds,omitempty"`
+}
+
+func (se SystemEvent) GetTimestamp() int {
+	return se.Timestamp
+}
+
 // QuoteServer data type
 type QuoteServer struct {
 	XMLName         xml.Name `xml:"quoteServer"`
-	Timestamp       string   `xml:"timestamp"`
+	Timestamp       int      `xml:"timestamp"`
 	Server          string   `xml:"server"`
 	TransactionNum  int      `xml:"transactionNum"`
 	Price           int      `xml:"price"`
 	StockSymbol     string   `xml:"stockSymbol"`
 	Username        string   `xml:"username"`
-	QuoteServerTime int
-	CryptoKey       string
+	QuoteServerTime int      `xml:"quoteServerTime"`
+	CryptoKey       string   `xml:"cryptoKey"`
+}
+
+func (qs QuoteServer) GetTimestamp() int {
+	return qs.Timestamp
 }
 
 // AccountTransaction data type
 type AccountTransaction struct {
 	XMLName        xml.Name `xml:"accountTransaction"`
-	Timestamp      string   `xml:"timestamp"`
+	Timestamp      int      `xml:"timestamp"`
 	Server         string   `xml:"server"`
 	TransactionNum int      `xml:"transactionNum"`
 	Action         string   `xml:"action"`
@@ -90,10 +103,14 @@ type AccountTransaction struct {
 	Funds          float64  `xml:"funds"`
 }
 
+func (at AccountTransaction) GetTimestamp() int {
+	return at.Timestamp
+}
+
 // ErrorEvent data type
 type ErrorEvent struct {
 	XMLName        xml.Name `xml:"errorEvent"`
-	Timestamp      string   `xml:"timestamp"`
+	Timestamp      int      `xml:"timestamp"`
 	Server         string   `xml:"server"`
 	TransactionNum int      `xml:"transactionNum"`
 	Command        string   `xml:"command"`
@@ -102,6 +119,14 @@ type ErrorEvent struct {
 	Filename       string   `xml:"filename,omitempty"`
 	Funds          float64  `xml:"funds,omitempty"`
 	ErrorMessage   string   `xml:"errorMessage,omitempty"`
+}
+
+func (ee ErrorEvent) GetTimestamp() int {
+	return ee.Timestamp
+}
+
+type LogType interface {
+	GetTimestamp() int
 }
 
 func logUserCommandHandler(w http.ResponseWriter, r *http.Request) {
@@ -183,13 +208,12 @@ func logQuoteServerHandler(w http.ResponseWriter, r *http.Request) {
 	req := struct {
 		TransactionNum  int
 		Server          string
-		Action          string
 		Username        string
 		Stock           string
 		CryptoKey       string
 		QuoteServerTime int64
 		Price           float64
-	}{0, "", "", "", "", "", 0, 0.0}
+	}{0, "", "", "", "", 0, 0.0}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
@@ -197,7 +221,7 @@ func logQuoteServerHandler(w http.ResponseWriter, r *http.Request) {
 	// res2B, _ := json.Marshal(req)
 	// fmt.Println(string(res2B))
 
-	queryString := "INSERT INTO quote_server_events (action, crypto_key, price, quote_server_time, server, stock, timestamp, transaction_num, user_id)" +
+	queryString := "INSERT INTO quote_server_events (crypto_key, price, quote_server_time, server, stock, timestamp, transaction_num, user_id)" +
 		" VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
 
 	timestamp := createTimestamp()
@@ -205,7 +229,7 @@ func logQuoteServerHandler(w http.ResponseWriter, r *http.Request) {
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare quote server event log query")
 
-	res, err := stmt.Exec(req.Action, req.CryptoKey, req.Price, req.QuoteServerTime, req.Server, req.Stock, timestamp, req.TransactionNum, req.Username)
+	res, err := stmt.Exec(req.CryptoKey, req.Price, req.QuoteServerTime, req.Server, req.Stock, timestamp, req.TransactionNum, req.Username)
 	failOnError(err, "Failed to add quote server event log")
 
 	numrows, err := res.RowsAffected()
@@ -231,15 +255,15 @@ func logAccountTransactionHandler(w http.ResponseWriter, r *http.Request) {
 	// res2B, _ := json.Marshal(req)
 	// fmt.Println(string(res2B))
 
-	queryString := "INSERT INTO account_transactions (action, funds, timestamp, transaction_num, user_id)" +
-		" VALUES ($1, $2, $3, $4, $5)"
+	queryString := "INSERT INTO account_transactions (action, funds, server, timestamp, transaction_num, user_id)" +
+		" VALUES ($1, $2, $3, $4, $5, $6)"
 
 	timestamp := createTimestamp()
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare account transaction log query")
 
-	res, err := stmt.Exec(req.Action, req.Funds, timestamp, req.TransactionNum, req.Username)
+	res, err := stmt.Exec(req.Action, req.Funds, req.Server, timestamp, req.TransactionNum, req.Username)
 	failOnError(err, "Failed to add account transaction log")
 
 	numrows, err := res.RowsAffected()
@@ -268,15 +292,15 @@ func logErrorEventHandler(w http.ResponseWriter, r *http.Request) {
 	// res2B, _ := json.Marshal(req)
 	// fmt.Println(string(res2B))
 
-	queryString := "INSERT INTO error_events (error_message, filename, funds, stock, timestamp, transaction_num, user_id)" +
-		" VALUES ($1, $2, $3, $4, $5, $6, $7)"
+	queryString := "INSERT INTO error_events (error_message, filename, funds, server, stock, timestamp, transaction_num, user_id)" +
+		" VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
 
 	timestamp := createTimestamp()
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare error events log query")
 
-	res, err := stmt.Exec(req.ErrorMessage, req.Filename, req.Funds, req.Stock, timestamp, req.TransactionNum, req.Username)
+	res, err := stmt.Exec(req.ErrorMessage, req.Filename, req.Funds, req.Server, req.Stock, timestamp, req.TransactionNum, req.Username)
 	failOnError(err, "Failed to add error events log")
 
 	numrows, err := res.RowsAffected()
@@ -294,33 +318,112 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
 
+	logs := []LogType{}
+
+	// Get usercommands
 	queryString := "SELECT * FROM user_commands"
 
 	rows, err := db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
 	defer rows.Close()
 
-	logs := []interface{}{}
-
 	for rows.Next() {
-		uc := UserCommand{}
+		logEvent := UserCommand{}
 
-		if err := rows.Scan(&uc.Command, &uc.Filename, &uc.Funds, &uc.Server,
-			&uc.StockSymbol, &uc.Timestamp, &uc.TransactionNum, &uc.Username); err != nil {
+		if err := rows.Scan(&logEvent.Command, &logEvent.Filename, &logEvent.Funds, &logEvent.Server,
+			&logEvent.StockSymbol, &logEvent.Timestamp, &logEvent.TransactionNum, &logEvent.Username); err != nil {
 			log.Fatal(err)
 		}
 
-		logs = append(logs, uc)
+		logs = append(logs, logEvent)
 	}
+	fmt.Println("here2")
+	// Get systemevents
+	queryString = "SELECT * FROM system_events"
+
+	rows, err = db.Query(queryString)
+	failOnError(err, "Failed to prepare query")
+	defer rows.Close()
+
+	for rows.Next() {
+		logEvent := SystemEvent{}
+
+		if err := rows.Scan(&logEvent.Command, &logEvent.Filename, &logEvent.Funds, &logEvent.Server,
+			&logEvent.StockSymbol, &logEvent.Timestamp, &logEvent.TransactionNum, &logEvent.Username); err != nil {
+			log.Fatal(err)
+		}
+
+		logs = append(logs, logEvent)
+	}
+
+	// Get quoteserver
+	queryString = "SELECT * FROM quote_server_events"
+
+	rows, err = db.Query(queryString)
+	failOnError(err, "Failed to prepare query")
+	defer rows.Close()
+	fmt.Println("here3")
+	for rows.Next() {
+		logEvent := QuoteServer{}
+
+		if err := rows.Scan(&logEvent.CryptoKey, &logEvent.Price, &logEvent.QuoteServerTime,
+			&logEvent.Server, &logEvent.StockSymbol, &logEvent.Timestamp, &logEvent.TransactionNum, &logEvent.Username); err != nil {
+			log.Fatal(err)
+		}
+
+		logs = append(logs, logEvent)
+	}
+	fmt.Println("here4")
+	// Get accounttransactions
+	queryString = "SELECT * FROM account_transactions"
+
+	rows, err = db.Query(queryString)
+	failOnError(err, "Failed to prepare query")
+	defer rows.Close()
+
+	for rows.Next() {
+		logEvent := AccountTransaction{}
+
+		if err := rows.Scan(&logEvent.Action, &logEvent.Funds, &logEvent.Server, &logEvent.Timestamp,
+			&logEvent.TransactionNum, &logEvent.Username); err != nil {
+			log.Fatal(err)
+		}
+
+		logs = append(logs, logEvent)
+	}
+	fmt.Println("here5")
+	// Get errorevents
+	queryString = "SELECT * FROM error_events"
+
+	rows, err = db.Query(queryString)
+	failOnError(err, "Failed to prepare query")
+	defer rows.Close()
+
+	for rows.Next() {
+		logEvent := ErrorEvent{}
+
+		if err := rows.Scan(&logEvent.ErrorMessage, &logEvent.Filename, &logEvent.Funds, &logEvent.Server,
+			&logEvent.StockSymbol, &logEvent.Timestamp, &logEvent.TransactionNum, &logEvent.Username); err != nil {
+			log.Fatal(err)
+		}
+
+		logs = append(logs, logEvent)
+	}
+	fmt.Println("here6")
+
+	// Sort by timestamp
+	sort.Slice(logs, func(i, j int) bool {
+		return logs[i].GetTimestamp() < logs[j].GetTimestamp()
+	})
 
 	// Write to file
 	file, err := os.Create(req.Filename)
 	failOnError(err, "File couldn't be created")
 	defer file.Close()
 
-	for _, uc := range logs {
+	for _, logEvent := range logs {
 
-		test, err := xml.MarshalIndent(uc, "  ", "    ")
+		test, err := xml.MarshalIndent(logEvent, "  ", "    ")
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 		}
