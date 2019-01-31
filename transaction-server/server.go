@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -96,12 +97,18 @@ func fireTrigger(UserID string, Symbol string, method string) {
 	defer rows.Close()
 
 	// Add/subtract the stocks to user's account
-	queryString = "INSERT INTO "
+	if method == "buy" {
+		buyStock(UserID, Symbol, strconv.Itoa(quantity))
+	} else {
+		sellStock(UserID, Symbol, strconv.Itoa(quantity))
+	}
 
 }
 
 func evalTrigger(UserID string, Symbol string, method string) bool {
 	queryString := "SELECT price FROM triggers WHERE symbol = $1 AND user_id = $2 and method = $3;"
+
+	fmt.Println(UserID, Symbol, method)
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -109,7 +116,10 @@ func evalTrigger(UserID string, Symbol string, method string) bool {
 	var triggerPrice float64
 
 	// Try to get a trigger for given user, symbol, and method
-	err = stmt.QueryRow(UserID, Symbol, method).Scan(&triggerPrice)
+	err = stmt.QueryRow(Symbol, UserID, method).Scan(&triggerPrice)
+	defer stmt.Close()
+
+	fmt.Println(triggerPrice)
 
 	// If no trigger exists, stop the routine monitoring it
 	if err == sql.ErrNoRows {
@@ -130,18 +140,18 @@ func evalTrigger(UserID string, Symbol string, method string) bool {
 			return false
 		}
 	}
-	defer stmt.Close()
-	return false
 }
 
 func monitorTrigger(UserID string, Symbol string, method string) {
 	// Create a ticker that fires every 60 seconds
-	ticker := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 
 	// Every time the ticker fires, check the trigger
-	for range ticker.C {
+	for i := range ticker.C {
+		fmt.Println("Tick at", i)
 		done := evalTrigger(UserID, Symbol, method)
 		if done {
+			fmt.Println("here")
 			return
 		}
 	}
@@ -187,7 +197,22 @@ func getQuote(symbol string) float64 {
 
 	if err == redis.Nil {
 		// Get quote from the quote server and store it with ttl 60s
-		cache.Set(symbol, "50.0", 60000000000)
+		r, err := http.Get("http://localhost:3000/quote")
+		failOnError(err, "Failed to retrieve quote from quote server")
+
+		defer r.Body.Close()
+
+		failOnError(err, "Failed to parse quote server response")
+		decoder := json.NewDecoder(r.Body)
+
+		res := struct {
+			Quote float64
+		}{0.0}
+
+		err = decoder.Decode(&res)
+		failOnError(err, "Failed to parse quote server response data")
+
+		cache.Set(symbol, strconv.FormatFloat(res.Quote, 'f', -1, 64), 60000000000)
 		return 50.0
 	} else {
 		// Otherwise, return the cached value
@@ -304,21 +329,10 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add new stocks to user's account
-	queryString := "INSERT INTO stocks (quantity, symbol, user_id) VALUES ($1, $2, $3) " +
-		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $1;"
-	stmt, err := db.Prepare(queryString)
-	failOnError(err, "Failed to prepare query")
-
-	res, err := stmt.Exec(tasks[1], tasks[0], req.UserID)
-	failOnError(err, "Failed to add stocks to account")
-
-	numrows, err := res.RowsAffected()
-	if numrows < 1 {
-		failOnError(err, "Failed to add stocks to account")
-	}
+	buyStock(req.UserID, tasks[0], tasks[1])
 }
 
-func buyStock(UserID string, Symbol string, quantity int) {
+func buyStock(UserID string, Symbol string, quantity string) {
 	// Add new stocks to user's account
 	queryString := "INSERT INTO stocks (quantity, symbol, user_id) VALUES ($1, $2, $3) " +
 		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $1;"
@@ -436,7 +450,21 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 	if numrows < 1 {
 		failOnError(err, "Failed to refund money for stock sale")
 	}
+}
 
+func sellStock(UserID string, Symbol string, quantity string) {
+	queryString := "UPDATE stocks SET quantity = quantity - $1 where user_id = $2 and symbol = $3;"
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare query")
+
+	// Withdraw the stocks to sell from user's account
+	res, err := stmt.Exec(quantity, UserID, Symbol)
+	failOnError(err, "Failed to reserve stocks to sell")
+
+	numrows, err := res.RowsAffected()
+	if numrows < 1 {
+		failOnError(err, "Failed to reserve stocks to sell")
+	}
 }
 
 // Tested
@@ -538,6 +566,12 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	if numrows < 1 {
 		failOnError(err, "Failed to add trigger")
 	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go monitorTrigger(req.UserID, req.Symbol, "buy")
+
 }
 
 // Tested
@@ -596,6 +630,9 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	if numrows < 1 {
 		failOnError(err, "Failed to add sell trigger")
 	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go monitorTrigger(req.UserID, req.Symbol, "sell")
 }
 
 // Tested
