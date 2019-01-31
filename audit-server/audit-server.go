@@ -420,19 +420,27 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 	file, err := os.Create(req.Filename)
 	failOnError(err, "File couldn't be created")
 	defer file.Close()
-
-	for _, logEvent := range logs {
-
-		test, err := xml.MarshalIndent(logEvent, "  ", "    ")
-		if err != nil {
-			fmt.Printf("error: %v\n", err)
-		}
-
-		n1, err := file.Write(test)
-		fmt.Printf("wrote %d bytes\n", n1)
-
-		failOnError(err, "Failed to write log files to XML")
+	test, err := xml.MarshalIndent(logs, "  ", "    ")
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
 	}
+
+	n1, err := file.Write(test)
+	fmt.Printf("wrote %d bytes\n", n1)
+
+	failOnError(err, "Failed to write log files to XML")
+	// for _, logEvent := range logs {
+
+	// 	test, err := xml.MarshalIndent(logEvent, "  ", "    ")
+	// 	if err != nil {
+	// 		fmt.Printf("error: %v\n", err)
+	// 	}
+
+	// 	n1, err := file.Write(test)
+	// 	fmt.Printf("wrote %d bytes\n", n1)
+
+	// 	failOnError(err, "Failed to write log files to XML")
+	// }
 
 	// os.Stdout.Write(test)
 }
