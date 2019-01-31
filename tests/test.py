@@ -1,5 +1,4 @@
 import requests
-from crate import client
 import time
 
 URL_ROOT = 'http://localhost:8080'
@@ -132,7 +131,7 @@ def test_quote_handler():
         'userID': '69',
         'symbol': 'abc'
     }
-    r = requests.post(URL_ROOT + '/quote', json=data)
+    r = requests.post(URL_ROOT + '/api/QUOTE', json=data)
 
 
 if __name__ == '__main__':

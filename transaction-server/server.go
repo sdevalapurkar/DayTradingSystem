@@ -130,12 +130,13 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
-
+	fmt.Println(req.Symbol)
 	// Get quote for the requested stock symbol
 	quote := getQuote(req.Symbol)
 
 	// Return UserID, Symbol, and stock quote in comma-delimited string
 	w.Write([]byte(req.UserID + "," + req.Symbol + "," + strconv.FormatFloat(quote, 'f', -1, 64)))
+
 }
 
 // Tested
@@ -357,6 +358,7 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to parse request")
 
 	cache.LPop(req.UserID + ":sell")
+	w.Write([]byte("Failed to commit sell transaction: no sell orders exist"))
 }
 
 // Tested
@@ -387,6 +389,7 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 	if numrows < 1 {
 		failOnError(err, "Failed to update buy amount")
 	}
+
 }
 
 // Tested
@@ -542,21 +545,21 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	port := ":8080"
-	http.HandleFunc("/add", addHandler)
-	http.HandleFunc("/quote", quoteHandler)
-	http.HandleFunc("/buy", buyHandler)
-	http.HandleFunc("/commit_buy", commitBuyHandler)
-	http.HandleFunc("/cancel_buy", cancelBuyHandler)
-	http.HandleFunc("/sell", sellHandler)
-	http.HandleFunc("/commit_sell", commitSellHandler)
-	http.HandleFunc("/cancel_sell", cancelSellHandler)
-	http.HandleFunc("/set_buy_amount", setBuyAmountHandler)
-	http.HandleFunc("/cancel_set_buy", cancelSetBuyHandler)
-	http.HandleFunc("/set_buy_trigger", setBuyTriggerHandler)
-	http.HandleFunc("/set_sell_amount", setSellAmountHandler)
-	http.HandleFunc("/set_sell_trigger", setSellTriggerHandler)
-	http.HandleFunc("/cancel_set_sell", cancelSetSellHandler)
-	http.HandleFunc("/dumplog", dumpLogHandler)
-	http.HandleFunc("/display_summary", displaySummaryHandler)
+	http.HandleFunc("/api/ADD", addHandler)
+	http.HandleFunc("/api/QUOTE", quoteHandler)
+	http.HandleFunc("/api/BUY", buyHandler)
+	http.HandleFunc("/api/COMMIT_BUY", commitBuyHandler)
+	http.HandleFunc("/api/CANCEL_BUY", cancelBuyHandler)
+	http.HandleFunc("/api/SELL", sellHandler)
+	http.HandleFunc("/api/COMMIT_SELL", commitSellHandler)
+	http.HandleFunc("/api/CANCEL_SELL", cancelSellHandler)
+	http.HandleFunc("/api/SET_BUY_AMOUNT", setBuyAmountHandler)
+	http.HandleFunc("/api/CANCEL_SET_BUY", cancelSetBuyHandler)
+	http.HandleFunc("/api/SET_BUY_TRIGGER", setBuyTriggerHandler)
+	http.HandleFunc("/api/SET_SELL_AMOUNT", setSellAmountHandler)
+	http.HandleFunc("/api/SET_SELL_TRIGGER", setSellTriggerHandler)
+	http.HandleFunc("/api/CANCEL_SET_SELL", cancelSetSellHandler)
+	http.HandleFunc("/api/DUMPLOG", dumpLogHandler)
+	http.HandleFunc("/api/DISPLAY_SUMMARY", displaySummaryHandler)
 	http.ListenAndServe(port, nil)
 }

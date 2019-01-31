@@ -11,13 +11,13 @@ for line in lines:
 
   # GET
   if command_type == 'QUOTE':
-    r = requests.get('http://localhost:8009/api/{}?transaction_num={}&user_id={}&stock_symbol={}'.format(command_type, commands[0], commands[1], commands[2]))
+    r = requests.get('http://localhost:8123/api/{}?transaction_num={}&user_id={}&stock_symbol={}'.format(command_type, commands[0], commands[1], commands[2]))
   elif command_type == 'DISPLAY_SUMMARY':
-    r = requests.get('http://localhost:8009/api/{}?transaction_num={}&user_id={}'.format(command_type, commands[0], commands[1]))
+    r = requests.get('http://localhost:8123/api/{}?transaction_num={}&user_id={}'.format(command_type, commands[0], commands[1]))
   elif command_type == 'DUMPLOG' and len(commands) == 3:
-    r = requests.get('http://localhost:8009/api/{}?transaction_num={}&user_id={}&filename={}'.format(command_type, commands[0], commands[1], commands[2]))
+    r = requests.get('http://localhost:8123/api/{}?transaction_num={}&user_id={}&filename={}'.format(command_type, commands[0], commands[1], commands[2]))
   elif command_type == 'DUMPLOG' and len(commands) == 2:
-    r = requests.get('http://localhost:8009/api/{}?transaction_num={}&filename={}'.format(command_type, commands[0], commands[1]))
+    r = requests.get('http://localhost:8123/api/{}?transaction_num={}&filename={}'.format(command_type, commands[0], commands[1]))
 
   else:
     command_dict = {
@@ -29,7 +29,7 @@ for line in lines:
       command_dict.update({
         'amount': commands[2]
       })
-      r = requests.put('http://localhost:8009/api/{}'.format(command_type), data=command_dict)
+      r = requests.put('http://localhost:8123/api/{}'.format(command_type), data=command_dict)
 
     # POST
     else:
@@ -45,6 +45,6 @@ for line in lines:
         })
       #elif command_type in ('COMMIT_BUY', 'CANCEL_BUY', 'COMMIT_SELL', 'CANCEL_SELL'):
 
-      r = requests.post('http://localhost:8009/api/{}'.format(command_type), data=command_dict)
+      r = requests.post('http://localhost:8123/api/{}'.format(command_type), data=command_dict)
 
   print(r.text)
