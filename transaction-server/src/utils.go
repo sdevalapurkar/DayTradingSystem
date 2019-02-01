@@ -1,8 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
 	"database/sql"
+
+	"github.com/go-redis/redis"
+	_ "github.com/herenow/go-crate"
 )
 
 // Connects to the database
