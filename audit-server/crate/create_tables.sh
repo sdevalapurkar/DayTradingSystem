@@ -26,7 +26,7 @@ crash -c "CREATE TABLE IF NOT EXISTS quote_server_events(
             stock STRING,  
             crypto_key STRING,
 	    quote_server_time INT,
-	    price INT    
+	    price FLOAT    
         );"
 crash -c "CREATE TABLE IF NOT EXISTS account_transactions(
 	    timestamp INT,
