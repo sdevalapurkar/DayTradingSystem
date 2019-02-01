@@ -2,17 +2,19 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const rp = require('request-promise');
 const app = express();
-const port = 8009;
+const port = 8123;
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
 
-app.get('/api/QUOTE', function(req, res) {
-  console.log('web server received QUOTE')
-  console.log(req.query);
+app.post('/quote', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
   rp({
-    uri: `http://localhost:8008/api/QUOTE?${req.originalUrl}`
+    method: 'POST',
+    uri: 'http://localhost:8080/quote',
+    body: { ...req.body, transactionNum },
+    json: true
   })
     .then(data => {
       console.log('data is ', data);
@@ -20,40 +22,19 @@ app.get('/api/QUOTE', function(req, res) {
     .catch(err => {
       console.log('err is', err);
     })
-  res.send('hey from get');
+  res.send('hey');
 });
 
-app.put('/api/ADD', function(req, res) {
-  console.log('Add endpoint');
-  console.log(req.body.amount);
-  if (req.body.amount < 0) {
-    res.send('Cannot add negative value')
-  } else {
-    rp({
-      method: 'PUT',
-      uri: 'http://localhost:8008/api/ADD',
-      body: req.body,
-      json: true
-    })
-      .then(data => {
-        console.log('data is ', data);
-      })
-      .catch(err => {
-        console.log('err is', err);
-      })
-    res.send('hey from put')
-  }
-});
-
-app.post('/api/BUY', function(req, res) {
-  console.log('Buy endpoint');
+app.post('/add', function(req, res) {
+  const amount = parseFloat(req.body.amount);
+  const transactionNum = parseInt(req.body.transactionNum);
   if (req.body.amount < 0) {
     res.send('Cannot add negative value')
   } else {
     rp({
       method: 'POST',
-      uri: 'http://localhost:8008/api/BUY',
-      body: req.body,
+      uri: 'http://localhost:8080/add',
+      body: { ...req.body, amount, transactionNum },
       json: true
     })
       .then(data => {
@@ -62,16 +43,40 @@ app.post('/api/BUY', function(req, res) {
       .catch(err => {
         console.log('err is', err);
       })
-    res.send('hey from put')
+    res.send('hey')
   }
 });
 
-app.post('/api/COMMIT_BUY', function(req, res) {
+app.post('/buy', function(req, res) {
+  console.log('Buy endpoint');
+  const amount = parseFloat(req.body.amount);
+  const transactionNum = parseInt(req.body.transactionNum);
+  if (req.body.amount < 0) {
+    res.send('Cannot add negative value')
+  } else {
+    rp({
+      method: 'POST',
+      uri: 'http://localhost:8080/buy',
+      body: { ...req.body, amount, transactionNum },
+      json: true
+    })
+      .then(data => {
+        console.log('data is ', data);
+      })
+      .catch(err => {
+        console.log('err is', err);
+      })
+    res.send('hey')
+  }
+});
+
+app.post('/commit_buy', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
   console.log('Commit Buy endpoint');
   rp({
     method: 'POST',
-    uri: 'http://localhost:8008/api/COMMIT_BUY',
-    body: req.body,
+    uri: 'http://localhost:8080/commit_buy',
+    body: { ...req.body, transactionNum },
     json: true
   })
     .then(data => {
@@ -80,15 +85,16 @@ app.post('/api/COMMIT_BUY', function(req, res) {
     .catch(err => {
       console.log('err is', err);
     })
-  res.send('hey from put')
+  res.send('hey')
 });
 
-app.post('/api/CANCEL_BUY', function(req, res) {
+app.post('/cancel_buy', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
   console.log('Cancel buy endpoint');
   rp({
     method: 'POST',
-    uri: 'http://localhost:8008/api/CANCEL_BUY',
-    body: req.body,
+    uri: 'http://localhost:8080/cancel_buy',
+    body: { ...req.body, transactionNum },
     json: true
   })
     .then(data => {
@@ -97,18 +103,20 @@ app.post('/api/CANCEL_BUY', function(req, res) {
     .catch(err => {
       console.log('err is', err);
     })
-  res.send('hey from put')
+  res.send('hey')
 });
 
-app.post('/api/SELL', function(req, res) {
+app.post('/sell', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
+  const amount = parseFloat(req.body.amount);
   console.log('Sell endpoint');
   if (req.body.amount < 0) {
     res.send('Cannot add negative value')
   } else {
     rp({
       method: 'POST',
-      uri: 'http://localhost:8008/api/SELL',
-      body: req.body,
+      uri: 'http://localhost:8080/sell',
+      body: { ...req.body, amount, transactionNum },
       json: true
     })
       .then(data => {
@@ -117,16 +125,17 @@ app.post('/api/SELL', function(req, res) {
       .catch(err => {
         console.log('err is', err);
       })
-    res.send('hey from put')
+    res.send('hey')
   }
 });
 
-app.post('/api/COMMIT_SELL', function(req, res) {
+app.post('/commit_sell', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
   console.log('Commit sell endpoint');
   rp({
     method: 'POST',
-    uri: 'http://localhost:8008/api/COMMIT_SELL',
-    body: req.body,
+    uri: 'http://localhost:8080/commit_sell',
+    body: { ...req.body, transactionNum },
     json: true
   })
     .then(data => {
@@ -135,15 +144,16 @@ app.post('/api/COMMIT_SELL', function(req, res) {
     .catch(err => {
       console.log('err is', err);
     })
-  res.send('hey from put')
+  res.send('hey')
 });
 
-app.post('/api/CANCEL_SELL', function(req, res) {
+app.post('/cancel_sell', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
   console.log('Cancel sell endpoint');
   rp({
     method: 'POST',
-    uri: 'http://localhost:8008/api/CANCEL_SELL',
-    body: req.body,
+    uri: 'http://localhost:8080/cancel_sell',
+    body: { ...req.body, transactionNum },
     json: true
   })
     .then(data => {
@@ -152,18 +162,20 @@ app.post('/api/CANCEL_SELL', function(req, res) {
     .catch(err => {
       console.log('err is', err);
     })
-  res.send('hey from put')
+  res.send('hey')
 });
 
-app.post('/api/SET_BUY_AMOUNT', function(req, res) {
+app.post('/set_buy_amount', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
+  const amount = parseFloat(req.body.amount);
   console.log('Set buy amount endpoint');
   if (req.body.amount < 0) {
     res.send('Cannot add negative value')
   } else {
     rp({
       method: 'POST',
-      uri: 'http://localhost:8008/api/SET_BUY_AMOUNT',
-      body: req.body,
+      uri: 'http://localhost:8080/set_buy_amount',
+      body: { ...req.body, amount, transactionNum },
       json: true
     })
       .then(data => {
@@ -172,16 +184,17 @@ app.post('/api/SET_BUY_AMOUNT', function(req, res) {
       .catch(err => {
         console.log('err is', err);
       })
-    res.send('hey from put')
+    res.send('hey')
   }
 });
 
-app.post('/api/CANCEL_SET_BUY', function(req, res) {
+app.post('/cancel_set_buy', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
   console.log('Cancel set buy endpoint');
   rp({
     method: 'POST',
-    uri: 'http://localhost:8008/api/CANCEL_SET_BUY',
-    body: req.body,
+    uri: 'http://localhost:8080/cancel_set_buy',
+    body: { ...req.body, transactionNum },
     json: true
   })
     .then(data => {
@@ -190,15 +203,17 @@ app.post('/api/CANCEL_SET_BUY', function(req, res) {
     .catch(err => {
       console.log('err is', err);
     })
-  res.send('hey from put')
+  res.send('hey')
 });
 
-app.post('/api/SET_BUY_TRIGGER', function(req, res) {
+app.post('/set_buy_trigger', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
+  const amount = parseFloat(req.body.amount);
   console.log('Set sell trigger endpoint');
   rp({
     method: 'POST',
-    uri: 'http://localhost:8008/api/SET_BUY_TRIGGER',
-    body: req.body,
+    uri: 'http://localhost:8080/set_buy_trigger',
+    body: { ...req.body, amount, transactionNum },
     json: true
   })
     .then(data => {
@@ -207,18 +222,20 @@ app.post('/api/SET_BUY_TRIGGER', function(req, res) {
     .catch(err => {
       console.log('err is', err);
     })
-  res.send('hey from put')
+  res.send('hey')
 });
 
-app.post('/api/SET_SELL_AMOUNT', function(req, res) {
+app.post('/set_sell_amount', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
+  const amount = parseFloat(req.body.amount);
   console.log('Set sell amount endpoint');
   if (req.body.amount < 0) {
     res.send('Cannot add negative value')
   } else {
     rp({
       method: 'POST',
-      uri: 'http://localhost:8008/api/SET_SELL_AMOUNT',
-      body: req.body,
+      uri: 'http://localhost:8080/set_sell_amount',
+      body: { ...req.body, amount, transactionNum },
       json: true
     })
       .then(data => {
@@ -227,16 +244,18 @@ app.post('/api/SET_SELL_AMOUNT', function(req, res) {
       .catch(err => {
         console.log('err is', err);
       })
-    res.send('hey from put')
+    res.send('hey')
   }
 });
 
-app.post('/api/SET_SELL_TRIGGER', function(req, res) {
+app.post('/set_sell_trigger', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
+  const amount = parseFloat(req.body.amount);
   console.log('Set sell trigger endpoint');
   rp({
     method: 'POST',
-    uri: 'http://localhost:8008/api/SET_SELL_TRIGGER',
-    body: req.body,
+    uri: 'http://localhost:8080/set_sell_trigger',
+    body: { ...req.body, amount, transactionNum },
     json: true
   })
     .then(data => {
@@ -245,15 +264,16 @@ app.post('/api/SET_SELL_TRIGGER', function(req, res) {
     .catch(err => {
       console.log('err is', err);
     })
-  res.send('hey from put')
+  res.send('hey')
 });
 
-app.post('/api/CANCEL_SET_SELL', function(req, res) {
+app.post('/cancel_set_sell', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
   console.log('Cancel set sell endpoint');
   rp({
     method: 'POST',
-    uri: 'http://localhost:8008/api/CANCEL_SET_SELL',
-    body: req.body,
+    uri: 'http://localhost:8080/cancel_set_sell',
+    body: { ...req.body, transactionNum },
     json: true
   })
     .then(data => {
@@ -262,13 +282,17 @@ app.post('/api/CANCEL_SET_SELL', function(req, res) {
     .catch(err => {
       console.log('err is', err);
     })
-  res.send('hey from put')
+  res.send('hey')
 });
 
-app.get('/api/DUMPLOG', function(req, res) {
+app.post('/dumplog', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
   console.log('Dumplog endpoint');
   rp({
-    uri: `http://localhost:8008/api/DUMPLOG?${req.originalUrl}`
+    method: 'POST',
+    uri: 'http://localhost:8080/dumplog',
+    body: { ...req.body, transactionNum },
+    json: true
   })
     .then(data => {
       console.log('data is ', data);
@@ -276,13 +300,17 @@ app.get('/api/DUMPLOG', function(req, res) {
     .catch(err => {
       console.log('err is', err);
     })
-  res.send('hey from put')
+  res.send('hey')
 });
 
-app.get('/api/DISPLAY_SUMMARY', function(req, res) {
+app.post('/display_summary', function(req, res) {
+  const transactionNum = parseInt(req.body.transactionNum);
   console.log('Display summary endpoint');
   rp({
-    uri: `http://localhost:8008/api/DISPLAY_SUMMARY?${req.originalUrl}`
+    method: 'POST',
+    uri: 'http://localhost:8080/display_summary',
+    body: { ...req.body, transactionNum },
+    json: true
   })
     .then(data => {
       console.log('data is ', data);
@@ -290,7 +318,7 @@ app.get('/api/DISPLAY_SUMMARY', function(req, res) {
     .catch(err => {
       console.log('err is', err);
     })
-  res.send('hey from put')
+  res.send('hey')
 });
 
 app.listen(port);
