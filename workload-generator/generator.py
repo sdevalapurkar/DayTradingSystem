@@ -10,24 +10,24 @@ for line in lines:
   command_type = commands.pop(1)
 
   command_dict = {
-    'transactionNum': commands[0][1:-1],
+    'transactionNum': int(commands[0][1:-1]),
   }
   if command_type == 'ADD':
     command_dict.update({
       'userID': commands[1],
-      'amount': commands[2]
+      'amount': float(commands[2])
     })
   elif command_type in ('BUY', 'SELL', 'SET_BUY_AMOUNT', 'SET_SELL_AMOUNT'):
     command_dict.update({
       'userID': commands[1],
       'symbol': commands[2],
-      'amount': commands[3]
+      'amount': float(commands[3])
     })
   elif command_type in ('SET_BUY_TRIGGER', 'SET_SELL_TRIGGER'):
     command_dict.update({
       'userID': commands[1],
       'symbol': commands[2],
-      'price': commands[3]
+      'price': float(commands[3])
     })
   elif command_type in ('QUOTE', 'CANCEL_SET_BUY', 'CANCEL_SET_SELL'):
     command_dict.update({

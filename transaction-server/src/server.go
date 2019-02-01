@@ -221,7 +221,7 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 		Amount float64 // Dollar value to sell
 		Symbol string
 		TransactionNum int
-	}{"", 0, "", 0}
+	}{"", 0.0, "", 0}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
@@ -335,9 +335,9 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 	req := struct {
 		UserID string   // id of the user buying
 		Symbol string   // symbol of the stock to buy
-		Amount int		// number of stocks to buy
+		Amount float64	// dollar amount of stock to buy
 		TransactionNum int
-	}{"", "", 0, 0}
+	}{"", "", 0.0, 0}
 
 	// Parse request into struct
 	err := decoder.Decode(&req)
@@ -426,9 +426,9 @@ func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 	req := struct {
 		UserID string
 		Symbol string
-		Amount int
+		Amount float64	// dollar amount of stock to sell
 		TransactionNum int
-	}{"", "", 0, 0}
+	}{"", "", 0.0, 0}
 
 	// Parse request into struct
 	err := decoder.Decode(&req)
