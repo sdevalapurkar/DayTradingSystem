@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"time"
-	"strconv"
 	"database/sql"
+	"fmt"
+	"strconv"
+	"time"
 )
 
 // Consumes a trigger and performs any buy/sell actions associated with it
@@ -39,9 +39,13 @@ func fireTrigger(UserID string, Symbol string, method string) {
 	// Add/subtract the stocks to user's account
 	if method == "buy" {
 		buyStock(UserID, Symbol, strconv.Itoa(quantity))
+		//logSystemEvent() todo
 	} else {
 		sellStock(UserID, Symbol, strconv.Itoa(quantity))
+		//logSystemEvent() todo
 	}
+
+	//logSystemEvent() todo
 }
 
 // Evaluates whether or not a given trigger should fire

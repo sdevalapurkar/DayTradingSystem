@@ -1,11 +1,11 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
-	"database/sql"
 
 	"github.com/go-redis/redis"
 	_ "github.com/herenow/go-crate"
@@ -28,6 +28,12 @@ func failOnError(err error, msg string) {
 	if err != nil {
 		fmt.Printf("%s: %s", msg, err)
 		panic(err)
+	}
+}
+
+func failGracefully(err error, msg string) {
+	if err != nil {
+		fmt.Printf("%s: %s", msg, err)
 	}
 }
 
@@ -70,11 +76,11 @@ func getQuote(symbol string) float64 {
 // Parameters:
 // 		UserID: 	the userID for the user to reserve funds from
 // 		amount:		the amount of money to reserve
-// 
+//
 func ReserveFunds(UserID string, amount float64) {
 
 }
 
 func ReleaseFunds(UserID string, amount float64) {
-	
+
 }
