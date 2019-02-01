@@ -10,6 +10,7 @@ app.use(bodyParser.json());
 
 app.post('/quote', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
+  console.log('Quote endpoint');
   rp({
     method: 'POST',
     uri: 'http://localhost:8080/quote',
@@ -28,6 +29,7 @@ app.post('/quote', function(req, res) {
 app.post('/add', function(req, res) {
   const amount = parseFloat(req.body.amount);
   const transactionNum = parseInt(req.body.transactionNum);
+  console.log('Add endpoint');
   if (req.body.amount < 0) {
     res.send('Cannot add negative value')
   } else {
@@ -208,12 +210,12 @@ app.post('/cancel_set_buy', function(req, res) {
 
 app.post('/set_buy_trigger', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  const amount = parseFloat(req.body.amount);
+  const price = parseFloat(req.body.price);
   console.log('Set sell trigger endpoint');
   rp({
     method: 'POST',
     uri: 'http://localhost:8080/set_buy_trigger',
-    body: { ...req.body, amount, transactionNum },
+    body: { ...req.body, price, transactionNum },
     json: true
   })
     .then(data => {
@@ -250,12 +252,12 @@ app.post('/set_sell_amount', function(req, res) {
 
 app.post('/set_sell_trigger', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  const amount = parseFloat(req.body.amount);
+  const price = parseFloat(req.body.price);
   console.log('Set sell trigger endpoint');
   rp({
     method: 'POST',
     uri: 'http://localhost:8080/set_sell_trigger',
-    body: { ...req.body, amount, transactionNum },
+    body: { ...req.body, price, transactionNum },
     json: true
   })
     .then(data => {
