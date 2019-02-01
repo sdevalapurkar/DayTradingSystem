@@ -58,7 +58,7 @@ func logSystemEvent(transactionNum int, server string, command string, username 
 		Stock          string
 		Filename       string
 		Funds          float64
-	}{transactionNum, server, command, username, stock, "", 0.0}
+	}{transactionNum, server, command, username, stock, "", funds}
 
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
@@ -77,7 +77,7 @@ func logUserCommand(transactionNum int, server string, command string, username 
 		Stock          string
 		Filename       string
 		Funds          float64
-	}{transactionNum, server, command, username, stock, "", 0.0}
+	}{transactionNum, server, command, username, stock, "", funds}
 
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
