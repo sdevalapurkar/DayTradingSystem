@@ -28,7 +28,7 @@ def test_add():
 def test_buy():
     data = {
         'userID': '69',
-        'amount': 400,
+        'amount': 400.00,
         'symbol': 'abe'
     }
 
@@ -166,11 +166,16 @@ def test_quote_handler():
     r = requests.post(URL_ROOT + '/quote', json=data)
 
 
+def test_buy_workflow():
+    test_buy()
+    time.sleep(3)
+    test_commit_buy()
+
 if __name__ == '__main__':
 
     # test_add()
-    # test_buy()
-    # test_commit_buy()
+    #test_buy()
+    #test_commit_buy()
     # test_sell()
     # test_commit_sell()
     # test_cancel_sell()
@@ -184,4 +189,5 @@ if __name__ == '__main__':
     # test_user_dumplog()
     # test_system_dumplog()
     # test_quote_handler()
-    test_quote_handler()
+    #test_quote_handler()
+    test_buy_workflow()

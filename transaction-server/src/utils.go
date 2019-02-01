@@ -1,8 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"database/sql"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/go-redis/redis"
 )
 
 // Connects to the database
@@ -64,11 +69,11 @@ func getQuote(symbol string) float64 {
 // Parameters:
 // 		UserID: 	the userID for the user to reserve funds from
 // 		amount:		the amount of money to reserve
-// 
+//
 func ReserveFunds(UserID string, amount float64) {
 
 }
 
 func ReleaseFunds(UserID string, amount float64) {
-	
+
 }

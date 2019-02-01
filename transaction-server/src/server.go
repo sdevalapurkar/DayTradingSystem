@@ -3,25 +3,28 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-redis/redis"
 	_ "github.com/herenow/go-crate"
 )
 
-//var host = "http://192.168.99.100"
+var host = "http://192.168.99.100"
 var auditServer = "http://localhost:4201"
 
-var host = "http://localhost"
+//var host = "http://localhost"
 
 var (
 	dbstring = host + ":4200/"
 	db       = loadDb()
 	cache    = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     "192.168.99.100:6379",
 		Password: "",
 		DB:       0,
 	})
@@ -35,6 +38,7 @@ func RedisClient() {
 	}
 
 	val, err := cache.Get("key").Result()
+	fmt.Println(val)
 	if err != nil {
 		panic(err)
 	}
@@ -147,8 +151,12 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		if numrows < 1 {
 			failOnError(err, "Failed to reserve funds")
 		}
-		// Add buy transaction to front of user's transaction list
-		cache.LPush(req.UserID+":buy", req.Symbol+":"+strconv.Itoa(buy_number))
+
+		// Add buy transaction to BACK of user's transaction list
+		surprise := rand.Intn(int(math.Pow(2, 32) - 1.0))
+		ts := float64(time.Now().Unix())
+
+		cache.ZAdd(req.UserID+":buy", redis.Z{ts, req.Symbol + ":" + strconv.Itoa(buy_number) + ":" + strconv.Itoa(surprise)})
 	}
 }
 
@@ -165,8 +173,12 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to parse request")
 
 	// Get most recent buy transaction
-	task := cache.LPop(req.UserID + ":buy")
-	tasks := strings.Split(task.Val(), ":")
+	task := cache.ZPopMin(req.UserID + ":buy").Val()
+	t, ok := task[0].Member.(string)
+	if !ok {
+		panic("NOT A STRING!!!")
+	}
+	tasks := strings.Split(t, ":")
 
 	// Check if there are any buy transactions to perform
 	if len(tasks) <= 1 {
@@ -204,7 +216,8 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
-	cache.LPop(req.UserID + ":buy")
+	cache.ZPopMin(req.UserID + ":buy")
+
 }
 
 // Tested
