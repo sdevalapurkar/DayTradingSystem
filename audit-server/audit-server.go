@@ -81,7 +81,7 @@ type QuoteServer struct {
 	Timestamp       int      `xml:"timestamp"`
 	Server          string   `xml:"server"`
 	TransactionNum  int      `xml:"transactionNum"`
-	Price           int      `xml:"price"`
+	Price           float64  `xml:"price"`
 	StockSymbol     string   `xml:"stockSymbol"`
 	Username        string   `xml:"username"`
 	QuoteServerTime int      `xml:"quoteServerTime"`
