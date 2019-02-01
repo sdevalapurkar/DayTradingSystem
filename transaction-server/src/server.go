@@ -104,14 +104,14 @@ func logAccountTransaction(transactionNum int, server string, action string, use
 	defer r.Body.Close()
 }
 
-func logQuoteServer(transactionNum int, server string, username string, stock string, cryptoKey string, quoteServerTime int, price float64) {
+func logQuoteServer(transactionNum int, server string, username string, stock string, cryptoKey string, quoteServerTime int64, price float64) {
 	req := struct {
 		TransactionNum  int
 		Server          string
 		Username        string
 		Stock           string
 		CryptoKey       string
-		QuoteServerTime int
+		QuoteServerTime int64
 		Price           float64
 	}{transactionNum, server, username, stock, cryptoKey, quoteServerTime, price}
 
@@ -172,13 +172,10 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to parse request")
 	fmt.Println(req.Symbol)
 	// Get quote for the requested stock symbol
-	quote := getQuote(req.Symbol)
+	quote := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 
 	// Return UserID, Symbol, and stock quote in comma-delimited string
 	w.Write([]byte(req.UserID + "," + req.Symbol + "," + strconv.FormatFloat(quote, 'f', -1, 64)))
-	cryptoKey := "foo"
-	quoteServerTime := 123212321
-	logQuoteServer(req.TransactionNum, "transaction-server", req.UserID, req.Symbol, cryptoKey, quoteServerTime, quote)
 	logUserCommand(req.TransactionNum, "transaction-server", "QUOTE", req.UserID, req.Symbol, "", 0.0)
 }
 
@@ -198,7 +195,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to parse the request")
 
 	// Get price of requested stock
-	price := getQuote(req.Symbol)
+	price := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 	// Calculate total cost to buy given amount of given stock
 	buyNumber := int(req.Amount / price)
 	cost := float64(buyNumber) * price
@@ -318,7 +315,7 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
-	price := getQuote(req.Symbol)
+	price := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 
 	// Calculate the number of the stock to sell
 	sellNumber := int(req.Amount / price)

@@ -10,11 +10,11 @@ def handleQuote():
   if request.method == 'POST':
     # Parse posted data into json object
     data = request.get_json()
-    response = jsonify({ 'quote': 50.0, 'cyrptokey': secrets.token_hex(32) })
+    response = jsonify({ 'quote': 50.0, 'cryptokey': secrets.token_hex(32) })
     response.status_code = 200
     return response
   elif request.method == 'GET':
-    response = jsonify({ 'quote': 100.0, 'cyrptokey': secrets.token_hex(32) })
+    response = jsonify({ 'quote': 100.0, 'cryptokey': secrets.token_hex(32) })
     response.cryptokey = secrets.token_hex(32)
     response.status_code = 200
     return response

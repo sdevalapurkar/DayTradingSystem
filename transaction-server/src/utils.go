@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-redis/redis"
 	_ "github.com/herenow/go-crate"
@@ -42,7 +43,7 @@ func failGracefully(err error, msg string) {
 // Parameters:
 //		symbol: 	(string) symbol of the stock to quote
 //
-func getQuote(symbol string) float64 {
+func getQuote(symbol string, transactionNum int, userID string) float64 {
 	// Check if symbol is in cache
 	quote, err := cache.Get(symbol).Result()
 
@@ -56,20 +57,23 @@ func getQuote(symbol string) float64 {
 		decoder := json.NewDecoder(r.Body)
 
 		res := struct {
-			Cyrptokey string
-			Quote float64
+			CryptoKey string
+			Quote     float64
 		}{"", 0.0}
 
 		err = decoder.Decode(&res)
 		failOnError(err, "Failed to parse quote server response data")
 
+		quoteServerTime := time.Now().UTC().Unix()
+		logQuoteServer(transactionNum, "transaction-server", userID, symbol, res.CryptoKey, quoteServerTime, res.Quote)
+
 		cache.Set(symbol, strconv.FormatFloat(res.Quote, 'f', -1, 64), 60000000000)
-		return res
+		return res.Quote
 	} else {
 		// Otherwise, return the cached value
 		quote, err := strconv.ParseFloat(quote, 32)
 		failOnError(err, "Failed to parse float from quote")
-		return res
+		return quote
 	}
 }
 
