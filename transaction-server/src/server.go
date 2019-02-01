@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 )
 
 //var host = "http://192.168.99.100"
-var auditServer = "http://localhost:4201"
+var auditServer = "http://localhost:8081"
 
 var host = "http://localhost"
 
@@ -48,19 +49,58 @@ var (
 // 	}
 // }
 
+func logSystemEvent(transactionNum int, server string, command string, username string, stock string, filename string, funds float64) {
+	req := struct {
+		TransactionNum int
+		Server         string
+		Command        string
+		Username       string
+		Stock          string
+		Filename       string
+		Funds          float64
+	}{transactionNum, server, command, username, stock, "", 0.0}
+
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(req)
+	r, err := http.Post(auditServer+"/logSystemEvent", "application/json; charset=utf-8", b)
+
+	failOnError(err, "Failed to retrieve quote from quote server")
+	defer r.Body.Close()
+}
+
+func logUserCommand(transactionNum int, server string, command string, username string, stock string, filename string, funds float64) {
+	req := struct {
+		TransactionNum int
+		Server         string
+		Command        string
+		Username       string
+		Stock          string
+		Filename       string
+		Funds          float64
+	}{transactionNum, server, command, username, stock, "", 0.0}
+
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(req)
+	r, err := http.Post(auditServer+"/logUserCommand", "application/json; charset=utf-8", b)
+
+	failOnError(err, "Failed to retrieve quote from quote server")
+	defer r.Body.Close()
+}
+
 // Tested
 func addHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID  string
-		Amount float64
+		UserID         string
+		Amount         float64
 		TransactionNum int
 	}{"", 0.0, 0}
 
 	// Read request json into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
+
 	// Insert new user if they don't already exist, otherwise update their balance
 	queryString := "INSERT INTO users (user_id, balance) VALUES ($1, $2)" +
 		"ON CONFLICT (user_id) DO UPDATE SET balance = balance + $2"
@@ -75,6 +115,8 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	if numrows < 1 {
 		failOnError(err, "Failed to add balance")
 	}
+
+	logUserCommand(req.TransactionNum, "transaction-server", "ADD", req.UserID, "", "", req.Amount)
 	//w.WriteHeader(http.StatusOK)
 }
 
@@ -91,6 +133,7 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
+	fmt.Println(req.Symbol)
 	// Get quote for the requested stock symbol
 	quote := getQuote(req.Symbol)
 
