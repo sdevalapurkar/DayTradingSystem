@@ -53,22 +53,21 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID         string
-		Balance        float64
+		UserID  string
+		Amount float64
 		TransactionNum int
 	}{"", 0.0, 0}
 
 	// Read request json into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
-
 	// Insert new user if they don't already exist, otherwise update their balance
 	queryString := "INSERT INTO users (user_id, balance) VALUES ($1, $2)" +
 		"ON CONFLICT (user_id) DO UPDATE SET balance = balance + $2"
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")
-	res, err := stmt.Exec(req.UserID, req.Balance)
+	res, err := stmt.Exec(req.UserID, req.Amount)
 	failOnError(err, "Failed to add balance")
 
 	// Check the query actually did something (because this one should always modify something, unless add 0..?)
@@ -92,7 +91,6 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
-	fmt.Println(req.Symbol)
 	// Get quote for the requested stock symbol
 	quote := getQuote(req.Symbol)
 
