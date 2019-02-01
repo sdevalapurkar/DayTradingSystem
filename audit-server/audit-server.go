@@ -309,7 +309,7 @@ func logErrorEventHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func dumpLog(w http.ResponseWriter, r *http.Request) {
+func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
@@ -318,11 +318,31 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
 
+	dumpLog(req.Filename, "", false)
+}
+
+func dumpUserLogHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+
+	req := struct {
+		Filename string
+		UserID   string
+	}{"", ""}
+	err := decoder.Decode(&req)
+	failOnError(err, "Failed to parse the request")
+
+	dumpLog(req.Filename, req.UserID, true)
+}
+
+func dumpLog(filename string, username string, isUser bool) {
+	userquery := ""
+	if isUser {
+		userquery = " WHERE user_id = '" + username + "'"
+	}
 	logs := []LogType{}
 
 	// Get usercommands
-	queryString := "SELECT * FROM user_commands"
-
+	queryString := "SELECT * FROM user_commands" + userquery
 	rows, err := db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
 	defer rows.Close()
@@ -339,7 +359,7 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get systemevents
-	queryString = "SELECT * FROM system_events"
+	queryString = "SELECT * FROM system_events" + userquery
 
 	rows, err = db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -357,7 +377,7 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get quoteserver
-	queryString = "SELECT * FROM quote_server_events"
+	queryString = "SELECT * FROM quote_server_events" + userquery
 
 	rows, err = db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -375,7 +395,7 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get accounttransactions
-	queryString = "SELECT * FROM account_transactions"
+	queryString = "SELECT * FROM account_transactions" + userquery
 
 	rows, err = db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -393,7 +413,7 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get errorevents
-	queryString = "SELECT * FROM error_events"
+	queryString = "SELECT * FROM error_events" + userquery
 
 	rows, err = db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -416,30 +436,21 @@ func dumpLog(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Write to file
-	file, err := os.Create(req.Filename)
+	file, err := os.Create(filename)
 	failOnError(err, "File couldn't be created")
 	defer file.Close()
+	file.Write([]byte("<?xml version=\"1.0\"?>\n"))
+	file.Write([]byte("<log>\n"))
 	test, err := xml.MarshalIndent(logs, "  ", "    ")
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 	}
 
 	n1, err := file.Write(test)
+	file.Write([]byte("\n</log>"))
 	fmt.Printf("wrote %d bytes\n", n1)
 
 	failOnError(err, "Failed to write log files to XML")
-
-}
-
-func dumpUserLog(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-
-	req := struct {
-		Filename string
-		UserID   string
-	}{"", ""}
-	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse the request")
 
 }
 
@@ -450,6 +461,7 @@ func main() {
 	http.HandleFunc("/logQuoteServer", logQuoteServerHandler)
 	http.HandleFunc("/logAccountTransaction", logAccountTransactionHandler)
 	http.HandleFunc("/logErrorEvent", logErrorEventHandler)
-	http.HandleFunc("/dumpLog", dumpLog)
+	http.HandleFunc("/dumpLog", dumpLogHandler)
+	http.HandleFunc("/dumpUserLog", dumpUserLogHandler)
 	http.ListenAndServe(port, nil)
 }
