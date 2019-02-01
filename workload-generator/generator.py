@@ -1,6 +1,7 @@
 import sys
 import requests
 import re
+import time
 
 lines = [line.rstrip('\n') for line in open(sys.argv[1])]
 lines = [re.sub(']\s', '],', line) for line in lines]
@@ -48,5 +49,5 @@ for line in lines:
       'filename': commands[1]
     })
   r = requests.post('http://localhost:8123/{}'.format(command_type), data=command_dict)
-
+  time.sleep(.5)
   print(r.text)
