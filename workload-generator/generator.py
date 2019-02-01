@@ -32,12 +32,12 @@ for line in lines:
     })
   elif command_type in ('QUOTE', 'CANCEL_SET_BUY', 'CANCEL_SET_SELL'):
     command_dict.update({
-      'user_id': commands[1],
+      'userID': commands[1],
       'symbol': commands[2]
     })
   elif command_type in ('COMMIT_BUY', 'CANCEL_BUY', 'COMMIT_SELL', 'CANCEL_SELL', 'DISPLAY_SUMMARY'):
     command_dict.update({
-      'user_id': commands[1]
+      'userID': commands[1]
   })
   elif command_type == 'DUMPLOG' and len(commands) == 3:
     command_dict.update({
@@ -49,5 +49,5 @@ for line in lines:
       'filename': commands[1]
     })
   r = requests.post('http://localhost:8123/{}'.format(command_type), data=command_dict)
-  time.sleep(.5)
+  time.sleep(1)
   print(r.text)
