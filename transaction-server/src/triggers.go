@@ -62,28 +62,29 @@ func fireTrigger(UserID string, Symbol string, method string) {
 //		method:			(string) the type of action to perform, one of ("buy", "sell")
 //
 func evalTrigger(UserID string, Symbol string, method string) bool {
-	queryString := "SELECT price FROM triggers WHERE symbol = $1 AND user_id = $2 and method = $3;"
+	queryString := "SELECT price, transaction_num FROM triggers WHERE symbol = $1 AND user_id = $2 and method = $3;"
 
 	fmt.Println(UserID, Symbol, method)
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")
 
-	var triggerPrice float64
+	res := struct {
+		triggerPrice   float64
+		transactionNum int
+	}{0.0, 0}
 
 	// Try to get a trigger for given user, symbol, and method
-	err = stmt.QueryRow(Symbol, UserID, method).Scan(&triggerPrice)
+	err = stmt.QueryRow(Symbol, UserID, method).Scan(&res)
 	defer stmt.Close()
-
-	fmt.Println(triggerPrice)
 
 	// If no trigger exists, stop the routine monitoring it
 	if err == sql.ErrNoRows {
 		return true
 	} else {
 		// If trigger still exists, check the value of the trigger against the price
-		quote := getQuote(Symbol)
-		diff := triggerPrice - quote
+		quote := getQuote(Symbol, res.transactionNum, UserID)
+		diff := res.triggerPrice - quote
 		if method == "sell" {
 			diff *= -1.0
 		}
