@@ -87,6 +87,23 @@ func logUserCommand(transactionNum int, server string, command string, username 
 	defer r.Body.Close()
 }
 
+func logAccountTransaction(transactionNum int, server string, action string, username string, funds float64) {
+	req := struct {
+		TransactionNum int
+		Server         string
+		Action         string
+		Username       string
+		Funds          float64
+	}{transactionNum, server, action, username, funds}
+
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(req)
+	r, err := http.Post(auditServer+"/logAccountTransaction", "application/json; charset=utf-8", b)
+
+	failOnError(err, "Failed to retrieve quote from quote server")
+	defer r.Body.Close()
+}
+
 // Tested
 func addHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
@@ -117,6 +134,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logUserCommand(req.TransactionNum, "transaction-server", "ADD", req.UserID, "", "", req.Amount)
+	logAccountTransaction(req.TransactionNum, "transaction-server", "add", req.UserID, req.Amount)
 	//w.WriteHeader(http.StatusOK)
 }
 
@@ -222,13 +240,13 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add new stocks to user's account
-	buyStock(req.UserID, tasks[0], tasks[1])
-
 	logUserCommand(req.TransactionNum, "transaction-server", "COMMIT_BUY", req.UserID, "", "", 0.0)
+
+	// Add new stocks to user's account
+	buyStock(req.UserID, tasks[0], tasks[1], req.TransactionNum)
 }
 
-func buyStock(UserID string, Symbol string, quantity string) {
+func buyStock(UserID string, Symbol string, quantity string, transactionNum int) {
 	// Add new stocks to user's account
 	queryString := "INSERT INTO stocks (quantity, symbol, user_id) VALUES ($1, $2, $3) " +
 		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $1;"
@@ -241,7 +259,10 @@ func buyStock(UserID string, Symbol string, quantity string) {
 	if numrows < 1 {
 		failGracefully(err, "Failed to add stocks to account")
 	}
-	// todo: logAccountTransaction()
+
+	f, err := strconv.ParseFloat(quantity, 64)
+	failOnError(err, "Failed to parse float")
+	logAccountTransaction(transactionNum, "transaction-server", "BUY", UserID, f) // todo add transnum
 }
 
 // Tested
@@ -353,7 +374,7 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 	logUserCommand(req.TransactionNum, "transaction-server", "COMMIT_SELL", req.UserID, "", "", 0.0)
 }
 
-func sellStock(UserID string, Symbol string, quantity string) {
+func sellStock(UserID string, Symbol string, quantity string, transactionNum int) {
 	queryString := "UPDATE stocks SET quantity = quantity - $1 where user_id = $2 and symbol = $3;"
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -368,7 +389,9 @@ func sellStock(UserID string, Symbol string, quantity string) {
 	if numrows < 1 {
 		failGracefully(err, "Failed to reserve stocks to sell")
 	}
-	// todo: logAccountTransaction()
+	f, err := strconv.ParseFloat(quantity, 64)
+	failOnError(err, "Failed to parse float")
+	logAccountTransaction(transactionNum, "transaction-server", "SELL", UserID, f)
 }
 
 // Tested
@@ -475,13 +498,13 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
-	queryString := "INSERT INTO triggers (user_id, symbol, price, method) VALUES ($1, $2, $3, 'buy') " +
+	queryString := "INSERT INTO triggers (user_id, symbol, price, method, transaction_num) VALUES ($1, $2, $3, 'buy', $4) " +
 		"ON CONFLICT (user_id, symbol, method) DO UPDATE SET price = $3;"
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query statement")
 
-	res, err := stmt.Exec(req.UserID, req.Symbol, req.Price)
+	res, err := stmt.Exec(req.UserID, req.Symbol, req.Price, req.TransactionNum)
 	if err != nil {
 		failGracefully(err, "Failed to add trigger")
 		w.Write([]byte("Failed to add trigger"))
@@ -553,13 +576,13 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
-	queryString := "INSERT INTO triggers (user_id, symbol, price, method) VALUES ($1, $2, $3, 'sell') " +
+	queryString := "INSERT INTO triggers (user_id, symbol, price, method, transaction_num) VALUES ($1, $2, $3, 'sell', $4) " +
 		"ON CONFLICT (user_id, symbol, method) DO UPDATE SET price = $3;"
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query statement")
 
-	res, err := stmt.Exec(req.UserID, req.Symbol, req.Price)
+	res, err := stmt.Exec(req.UserID, req.Symbol, req.Price, req.TransactionNum)
 
 	if err != nil {
 		failGracefully(err, "Failed to add sell trigger")
