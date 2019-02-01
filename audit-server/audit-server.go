@@ -211,7 +211,7 @@ func logQuoteServerHandler(w http.ResponseWriter, r *http.Request) {
 		Username        string
 		Stock           string
 		CryptoKey       string
-		QuoteServerTime int64
+		QuoteServerTime int
 		Price           float64
 	}{0, "", "", "", "", 0, 0.0}
 

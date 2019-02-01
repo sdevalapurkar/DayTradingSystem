@@ -64,7 +64,7 @@ func logSystemEvent(transactionNum int, server string, command string, username 
 	json.NewEncoder(b).Encode(req)
 	r, err := http.Post(auditServer+"/logSystemEvent", "application/json; charset=utf-8", b)
 
-	failOnError(err, "Failed to retrieve quote from quote server")
+	failOnError(err, "Failed to log system event")
 	defer r.Body.Close()
 }
 
@@ -83,7 +83,7 @@ func logUserCommand(transactionNum int, server string, command string, username 
 	json.NewEncoder(b).Encode(req)
 	r, err := http.Post(auditServer+"/logUserCommand", "application/json; charset=utf-8", b)
 
-	failOnError(err, "Failed to retrieve quote from quote server")
+	failOnError(err, "Failed to log user command")
 	defer r.Body.Close()
 }
 
@@ -100,7 +100,26 @@ func logAccountTransaction(transactionNum int, server string, action string, use
 	json.NewEncoder(b).Encode(req)
 	r, err := http.Post(auditServer+"/logAccountTransaction", "application/json; charset=utf-8", b)
 
-	failOnError(err, "Failed to retrieve quote from quote server")
+	failOnError(err, "Failed to log account transaction")
+	defer r.Body.Close()
+}
+
+func logQuoteServer(transactionNum int, server string, username string, stock string, cryptoKey string, quoteServerTime int, price float64) {
+	req := struct {
+		TransactionNum  int
+		Server          string
+		Username        string
+		Stock           string
+		CryptoKey       string
+		QuoteServerTime int
+		Price           float64
+	}{transactionNum, server, username, stock, cryptoKey, quoteServerTime, price}
+
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(req)
+	r, err := http.Post(auditServer+"/logQuoteServer", "application/json; charset=utf-8", b)
+
+	failOnError(err, "Failed to log quote server")
 	defer r.Body.Close()
 }
 
@@ -157,7 +176,10 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Return UserID, Symbol, and stock quote in comma-delimited string
 	w.Write([]byte(req.UserID + "," + req.Symbol + "," + strconv.FormatFloat(quote, 'f', -1, 64)))
-
+	cryptoKey := "foo"
+	quoteServerTime := 123212321
+	logQuoteServer(req.TransactionNum, "transaction-server", req.UserID, req.Symbol, cryptoKey, quoteServerTime, quote)
+	logUserCommand(req.TransactionNum, "transaction-server", "QUOTE", req.UserID, req.Symbol, "", 0.0)
 }
 
 // Tested
