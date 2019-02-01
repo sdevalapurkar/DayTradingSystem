@@ -169,7 +169,7 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	}{"", "", 0}
 
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse request")	
+	failOnError(err, "Failed to parse request")
 	logUserCommand(req.TransactionNum, "transaction-server", "QUOTE", req.UserID, req.Symbol, "", 0.0)
 
 	// Get quote for the requested stock symbol
@@ -193,7 +193,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	// Read request json data into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
-	
+
 	logUserCommand(req.TransactionNum, "transaction-server", "BUY", req.UserID, req.Symbol, "", req.Amount)
 
 	// Get price of requested stock
@@ -315,7 +315,7 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 	logUserCommand(req.TransactionNum, "transaction-server", "SELL", req.UserID, req.Symbol, "", req.Amount)
-	
+
 	price := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 
 	// Calculate the number of the stock to sell
@@ -674,7 +674,7 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
-	if req.UserID != "" {
+	if req.UserID == "" {
 		logUserCommand(req.TransactionNum, "transaction-server", "DUMPLOG", "Admin", "", req.Filename, 0.0)
 	} else {
 		logUserCommand(req.TransactionNum, "transaction-server", "DUMPLOG", req.UserID, "", req.Filename, 0.0)
@@ -683,7 +683,7 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 
-	if req.UserID != "" {
+	if req.UserID == "" {
 		res, err := http.Post(auditServer+"/dumpLog", "application/json; charset=utf-8", b)
 		failOnError(err, "Failed to retrieve quote from quote server")
 		defer res.Body.Close()
