@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"time"
-	"strconv"
 	"database/sql"
+	"fmt"
+	"strconv"
+	"time"
 )
 
 // Consumes a trigger and performs any buy/sell actions associated with it
@@ -14,8 +14,17 @@ import (
 //		method:			(string) the type of action to perform, one of ("buy", "sell")
 //
 func fireTrigger(UserID string, Symbol string, method string) {
+
+	// Get transaction num
+	var transactionNum int
+	queryString := "SELECT transaction_num FROM triggers WHERE user_id = $1 AND symbol = $2 AND method = $3;"
+	stmt, err := db.Prepare(queryString)
+	failOnError(err, "Failed to prepare transactionNum query")
+	err = stmt.QueryRow(UserID, Symbol, method).Scan(&transactionNum)
+	failOnError(err, "Failed to get transactionNum")
+
 	// Consume trigger
-	queryString := "DELETE FROM triggers WHERE user_id = $1 AND symbol = $2 AND method = $3;"
+	queryString = "DELETE FROM triggers WHERE user_id = $1 AND symbol = $2 AND method = $3;"
 	rows, err := db.Query(queryString, UserID, Symbol, method)
 	failOnError(err, "Failed to delete trigger after firing")
 	defer rows.Close()
@@ -25,7 +34,7 @@ func fireTrigger(UserID string, Symbol string, method string) {
 	var quantity int
 	// Get quantity of stock to buy/sell
 	queryString = "SELECT quantity FROM " + method + "_amounts " + whereCond
-	stmt, err := db.Prepare(queryString)
+	stmt, err = db.Prepare(queryString)
 	failOnError(err, "Failed to prepare SELECT quantity query")
 	err = stmt.QueryRow(UserID, Symbol).Scan(&quantity)
 	failOnError(err, "Failed to get quantity from "+method+"_amounts")
@@ -38,9 +47,11 @@ func fireTrigger(UserID string, Symbol string, method string) {
 
 	// Add/subtract the stocks to user's account
 	if method == "buy" {
-		buyStock(UserID, Symbol, strconv.Itoa(quantity))
+		buyStock(UserID, Symbol, strconv.Itoa(quantity), transactionNum)
+		logSystemEvent(transactionNum, "transaction-server", "BUY", UserID, Symbol, "", float64(quantity))
 	} else {
-		sellStock(UserID, Symbol, strconv.Itoa(quantity))
+		sellStock(UserID, Symbol, strconv.Itoa(quantity), transactionNum)
+		logSystemEvent(transactionNum, "transaction-server", "SELL", UserID, Symbol, "", float64(quantity))
 	}
 }
 

@@ -27,6 +27,7 @@ crash -c "CREATE TABLE IF NOT EXISTS triggers(
             symbol STRING,
             price FLOAT,
             method STRING,
-            PRIMARY KEY (user_id, symbol, method)
+            transaction_num INT,
+	    PRIMARY KEY (user_id, symbol, method)
         );"
 exec "$@"
