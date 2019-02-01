@@ -137,6 +137,9 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
 
+	logUserCommand(req.TransactionNum, "transaction-server", "ADD", req.UserID, "", "", req.Amount)
+	logAccountTransaction(req.TransactionNum, "transaction-server", "add", req.UserID, req.Amount)
+
 	// Insert new user if they don't already exist, otherwise update their balance
 	queryString := "INSERT INTO users (user_id, balance) VALUES ($1, $2)" +
 		"ON CONFLICT (user_id) DO UPDATE SET balance = balance + $2"
@@ -151,9 +154,6 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	if numrows < 1 {
 		failOnError(err, "Failed to add balance")
 	}
-
-	logUserCommand(req.TransactionNum, "transaction-server", "ADD", req.UserID, "", "", req.Amount)
-	logAccountTransaction(req.TransactionNum, "transaction-server", "add", req.UserID, req.Amount)
 	//w.WriteHeader(http.StatusOK)
 }
 
@@ -169,14 +169,14 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	}{"", "", 0}
 
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse request")
-	fmt.Println(req.Symbol)
+	failOnError(err, "Failed to parse request")	
+	logUserCommand(req.TransactionNum, "transaction-server", "QUOTE", req.UserID, req.Symbol, "", 0.0)
+
 	// Get quote for the requested stock symbol
 	quote := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 
 	// Return UserID, Symbol, and stock quote in comma-delimited string
 	w.Write([]byte(req.UserID + "," + req.Symbol + "," + strconv.FormatFloat(quote, 'f', -1, 64)))
-	logUserCommand(req.TransactionNum, "transaction-server", "QUOTE", req.UserID, req.Symbol, "", 0.0)
 }
 
 // Tested
@@ -193,6 +193,8 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	// Read request json data into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
+	
+	logUserCommand(req.TransactionNum, "transaction-server", "BUY", req.UserID, req.Symbol, "", req.Amount)
 
 	// Get price of requested stock
 	price := getQuote(req.Symbol, req.TransactionNum, req.UserID)
@@ -232,8 +234,6 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		// Add buy transaction to front of user's transaction list
 		cache.LPush(req.UserID+":buy", req.Symbol+":"+strconv.Itoa(buyNumber))
 	}
-
-	logUserCommand(req.TransactionNum, "transaction-server", "BUY", req.UserID, req.Symbol, "", req.Amount)
 }
 
 // Tested
@@ -249,6 +249,8 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
+	logUserCommand(req.TransactionNum, "transaction-server", "COMMIT_BUY", req.UserID, "", "", 0.0)
+
 	// Get most recent buy transaction
 	task := cache.LPop(req.UserID + ":buy")
 	tasks := strings.Split(task.Val(), ":")
@@ -258,8 +260,6 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Failed to commit buy transaction: no buy orders exist"))
 		return
 	}
-
-	logUserCommand(req.TransactionNum, "transaction-server", "COMMIT_BUY", req.UserID, "", "", 0.0)
 
 	// Add new stocks to user's account
 	buyStock(req.UserID, tasks[0], tasks[1], req.TransactionNum)
@@ -314,7 +314,8 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
-
+	logUserCommand(req.TransactionNum, "transaction-server", "SELL", req.UserID, req.Symbol, "", req.Amount)
+	
 	price := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 
 	// Calculate the number of the stock to sell
@@ -356,7 +357,6 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(salePrice)
 		cache.LPush(req.UserID+":sell", req.Symbol+":"+strconv.FormatFloat(salePrice, 'f', -1, 64))
 	}
-	logUserCommand(req.TransactionNum, "transaction-server", "SELL", req.UserID, req.Symbol, "", req.Amount)
 }
 
 // Tested
@@ -370,6 +370,8 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
+
+	logUserCommand(req.TransactionNum, "transaction-server", "COMMIT_SELL", req.UserID, "", "", 0.0)
 
 	task := cache.LPop(req.UserID + ":sell")
 	tasks := strings.Split(task.Val(), ":")
@@ -390,10 +392,13 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 		failGracefully(err, "Failed to refund money for stock sale")
 		return
 	}
-	logUserCommand(req.TransactionNum, "transaction-server", "COMMIT_SELL", req.UserID, "", "", 0.0)
 }
 
 func sellStock(UserID string, Symbol string, quantity string, transactionNum int) {
+	f, err := strconv.ParseFloat(quantity, 64)
+	failOnError(err, "Failed to parse float")
+	logAccountTransaction(transactionNum, "transaction-server", "SELL", UserID, f)
+
 	queryString := "UPDATE stocks SET quantity = quantity - $1 where user_id = $2 and symbol = $3;"
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -408,9 +413,6 @@ func sellStock(UserID string, Symbol string, quantity string, transactionNum int
 	if numrows < 1 {
 		failGracefully(err, "Failed to reserve stocks to sell")
 	}
-	f, err := strconv.ParseFloat(quantity, 64)
-	failOnError(err, "Failed to parse float")
-	logAccountTransaction(transactionNum, "transaction-server", "SELL", UserID, f)
 }
 
 // Tested
@@ -425,8 +427,9 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
-	cache.LPop(req.UserID + ":sell")
 	logUserCommand(req.TransactionNum, "transaction-server", "CANCEL_SELL", req.UserID, "", "", 0.0)
+
+	cache.LPop(req.UserID + ":sell")
 }
 
 // Tested
@@ -443,6 +446,8 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse request into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
+
+	logUserCommand(req.TransactionNum, "transaction-server", "SET_BUY_AMOUNT", req.UserID, req.Symbol, "", req.Amount)
 
 	// Add buy amount to user's account. If a buy amount already exists for the requested stock, add this to it
 	queryString := "INSERT INTO buy_amounts (user_id, symbol, quantity) VALUES ($1, $2, $3) " +
@@ -462,8 +467,6 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 		failGracefully(err, "Failed to update buy amount")
 		return
 	}
-
-	logUserCommand(req.TransactionNum, "transaction-server", "SET_BUY_AMOUNT", req.UserID, req.Symbol, "", req.Amount)
 }
 
 // Tested
@@ -479,6 +482,8 @@ func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse request parameters into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
+
+	logUserCommand(req.TransactionNum, "transaction-server", "CANCEL_SET_BUY", req.UserID, req.Symbol, "", 0.0)
 
 	queryString1 := "DELETE FROM buy_amounts WHERE user_id = $1 AND symbol = $2;"
 	queryString2 := "DELETE FROM triggers WHERE user_id = $1 AND symbol = $2 AND method = 'buy';"
@@ -498,8 +503,6 @@ func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Failed to delete trigger")
 		return
 	}
-
-	logUserCommand(req.TransactionNum, "transaction-server", "CANCEL_SET_BUY", req.UserID, req.Symbol, "", 0.0)
 }
 
 // TODO: Every 60 seconds, see if price is cached. If it is, check it against triggers. If it's not and there's a trigger
@@ -516,6 +519,8 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
+
+	logUserCommand(req.TransactionNum, "transaction-server", "SET_BUY_TRIGGER", req.UserID, req.Symbol, "", req.Price)
 
 	queryString := "INSERT INTO triggers (user_id, symbol, price, method, transaction_num) VALUES ($1, $2, $3, 'buy', $4) " +
 		"ON CONFLICT (user_id, symbol, method) DO UPDATE SET price = $3;"
@@ -539,8 +544,6 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go monitorTrigger(req.UserID, req.Symbol, "buy")
-
-	logUserCommand(req.TransactionNum, "transaction-server", "SET_BUY_TRIGGER", req.UserID, req.Symbol, "", req.Price)
 }
 
 // Tested
@@ -557,6 +560,8 @@ func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse request into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
+
+	logUserCommand(req.TransactionNum, "transaction-server", "SET_SELL_AMOUNT", req.UserID, req.Symbol, "", req.Amount)
 
 	// Add buy amount to user's account. If a buy amount already exists for the requested stock, add this to it
 	queryString := "INSERT INTO sell_amounts (user_id, symbol, quantity) VALUES ($1, $2, $3) " +
@@ -577,8 +582,6 @@ func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Failed to update sell amount"))
 		return
 	}
-
-	logUserCommand(req.TransactionNum, "transaction-server", "SET_SELL_AMOUNT", req.UserID, req.Symbol, "", req.Amount)
 }
 
 // Tested
@@ -594,6 +597,8 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
+
+	logUserCommand(req.TransactionNum, "transaction-server", "SET_SELL_TRIGGER", req.UserID, req.Symbol, "", req.Price)
 
 	queryString := "INSERT INTO triggers (user_id, symbol, price, method, transaction_num) VALUES ($1, $2, $3, 'sell', $4) " +
 		"ON CONFLICT (user_id, symbol, method) DO UPDATE SET price = $3;"
@@ -618,8 +623,6 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go monitorTrigger(req.UserID, req.Symbol, "sell")
-
-	logUserCommand(req.TransactionNum, "transaction-server", "SET_SELL_TRIGGER", req.UserID, req.Symbol, "", req.Price)
 }
 
 // Tested
@@ -635,6 +638,7 @@ func cancelSetSellHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse request parameters into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
+	logUserCommand(req.TransactionNum, "transaction-server", "CANCEL_SET_SELL", req.UserID, req.Symbol, "", 0.0)
 
 	queryString1 := "DELETE FROM sell_amounts WHERE user_id = $1 AND symbol = $2;"
 	queryString2 := "DELETE FROM triggers WHERE user_id = $1 AND symbol = $2 AND method = 'sell';"
@@ -655,8 +659,6 @@ func cancelSetSellHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer rows2.Close()
-
-	logUserCommand(req.TransactionNum, "transaction-server", "CANCEL_SET_SELL", req.UserID, req.Symbol, "", 0.0)
 }
 
 func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
@@ -672,6 +674,12 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
+	if req.UserID != "" {
+		logUserCommand(req.TransactionNum, "transaction-server", "DUMPLOG", "Admin", "", req.Filename, 0.0)
+	} else {
+		logUserCommand(req.TransactionNum, "transaction-server", "DUMPLOG", req.UserID, "", req.Filename, 0.0)
+	}
+
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 
@@ -683,12 +691,6 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 		res, err := http.Post(auditServer+"/dumpUserLog", "application/json; charset=utf-8", b)
 		failOnError(err, "Failed to retrieve quote from quote server")
 		defer res.Body.Close()
-	}
-
-	if req.UserID != "" {
-		logUserCommand(req.TransactionNum, "transaction-server", "DUMPLOG", "Admin", "", req.Filename, 0.0)
-	} else {
-		logUserCommand(req.TransactionNum, "transaction-server", "DUMPLOG", req.UserID, "", req.Filename, 0.0)
 	}
 }
 
