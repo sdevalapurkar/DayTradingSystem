@@ -53,8 +53,8 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID  string
-		Balance float64
+		UserID         string
+		Balance        float64
 		TransactionNum int
 	}{"", 0.0, 0}
 
@@ -85,8 +85,8 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse request into struct
 	req := struct {
-		UserID string
-		Symbol string
+		UserID         string
+		Symbol         string
 		TransactionNum int
 	}{"", "", 0}
 
@@ -105,9 +105,9 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID string
-		Amount float64
-		Symbol string
+		UserID         string
+		Amount         float64
+		Symbol         string
 		TransactionNum int
 	}{"", 0.0, "", 0}
 
@@ -160,7 +160,7 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID string
+		UserID         string
 		TransactionNum int
 	}{"", 0}
 
@@ -202,7 +202,7 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID string
+		UserID         string
 		TransactionNum int
 	}{"", 0}
 
@@ -217,9 +217,9 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID string
-		Amount float64 // Dollar value to sell
-		Symbol string
+		UserID         string
+		Amount         float64 // Dollar value to sell
+		Symbol         string
 		TransactionNum int
 	}{"", 0.0, "", 0}
 
@@ -270,7 +270,7 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID string
+		UserID         string
 		TransactionNum int
 	}{"", 0}
 
@@ -317,7 +317,7 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID string
+		UserID         string
 		TransactionNum int
 	}{"", 0}
 
@@ -333,9 +333,9 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID string   // id of the user buying
-		Symbol string   // symbol of the stock to buy
-		Amount float64	// dollar amount of stock to buy
+		UserID         string  // id of the user buying
+		Symbol         string  // symbol of the stock to buy
+		Amount         float64 // dollar amount of stock to buy
 		TransactionNum int
 	}{"", "", 0.0, 0}
 
@@ -364,8 +364,8 @@ func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID string
-		Symbol string
+		UserID         string
+		Symbol         string
 		TransactionNum int
 	}{"", "", 0}
 
@@ -391,9 +391,9 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID string
-		Symbol string
-		Price  float64
+		UserID         string
+		Symbol         string
+		Price          float64
 		TransactionNum int
 	}{"", "", 0.0, 0}
 
@@ -424,9 +424,9 @@ func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID string
-		Symbol string
-		Amount float64	// dollar amount of stock to sell
+		UserID         string
+		Symbol         string
+		Amount         float64 // dollar amount of stock to sell
 		TransactionNum int
 	}{"", "", 0.0, 0}
 
@@ -455,9 +455,9 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID string
-		Symbol string
-		Price  float64
+		UserID         string
+		Symbol         string
+		Price          float64
 		TransactionNum int
 	}{"", "", 0.0, 0}
 
@@ -487,8 +487,8 @@ func cancelSetSellHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
-		UserID string
-		Symbol string
+		UserID         string
+		Symbol         string
 		TransactionNum int
 	}{"", "", 0}
 

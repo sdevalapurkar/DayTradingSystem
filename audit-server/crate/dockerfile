@@ -1,0 +1,12 @@
+FROM crate:latest
+
+COPY . /
+
+
+#ENTRYPOINT ["sh", "/crate_entry_point.sh"]
+RUN ln -sf /usr/bin/python3.6 /usr/bin/python3
+CMD ["crate"]
+
+#CMD ["/crate_entry_point.sh"]
+
+#CMD ["sh", "-c", "crate; /crate_entry_point.sh"]
