@@ -58,6 +58,10 @@ func (uc UserCommand) GetTimestamp() int {
 	return uc.Timestamp
 }
 
+func (uc UserCommand) GetTransactionNum() int {
+	return uc.TransactionNum
+}
+
 // SystemEvent data type
 type SystemEvent struct {
 	XMLName        xml.Name `xml:"systemEvent"`
@@ -73,6 +77,10 @@ type SystemEvent struct {
 
 func (se SystemEvent) GetTimestamp() int {
 	return se.Timestamp
+}
+
+func (se SystemEvent) GetTransactionNum() int {
+	return se.TransactionNum
 }
 
 // QuoteServer data type
@@ -92,6 +100,10 @@ func (qs QuoteServer) GetTimestamp() int {
 	return qs.Timestamp
 }
 
+func (qs QuoteServer) GetTransactionNum() int {
+	return qs.TransactionNum
+}
+
 // AccountTransaction data type
 type AccountTransaction struct {
 	XMLName        xml.Name `xml:"accountTransaction"`
@@ -105,6 +117,10 @@ type AccountTransaction struct {
 
 func (at AccountTransaction) GetTimestamp() int {
 	return at.Timestamp
+}
+
+func (at AccountTransaction) GetTransactionNum() int {
+	return at.TransactionNum
 }
 
 // ErrorEvent data type
@@ -125,8 +141,13 @@ func (ee ErrorEvent) GetTimestamp() int {
 	return ee.Timestamp
 }
 
+func (ee ErrorEvent) GetTransactionNum() int {
+	return ee.TransactionNum
+}
+
 type LogType interface {
 	GetTimestamp() int
+	GetTransactionNum() int
 }
 
 func logUserCommandHandler(w http.ResponseWriter, r *http.Request) {
@@ -144,9 +165,6 @@ func logUserCommandHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
-
-	// res2B, _ := json.Marshal(req)
-	// fmt.Println(string(res2B))
 
 	queryString := "INSERT INTO user_commands (command, filename, funds, server, stock, timestamp, transaction_num, user_id)" +
 		" VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
@@ -182,9 +200,6 @@ func logSystemEventHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
 
-	// res2B, _ := json.Marshal(req)
-	// fmt.Println(string(res2B))
-
 	queryString := "INSERT INTO system_events (command, filename, funds, server, stock, timestamp, transaction_num, user_id)" +
 		" VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
 
@@ -218,9 +233,6 @@ func logQuoteServerHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
 
-	// res2B, _ := json.Marshal(req)
-	// fmt.Println(string(res2B))
-
 	queryString := "INSERT INTO quote_server_events (crypto_key, price, quote_server_time, server, stock, timestamp, transaction_num, user_id)" +
 		" VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
 
@@ -251,9 +263,6 @@ func logAccountTransactionHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
-
-	// res2B, _ := json.Marshal(req)
-	// fmt.Println(string(res2B))
 
 	queryString := "INSERT INTO account_transactions (action, funds, server, timestamp, transaction_num, user_id)" +
 		" VALUES ($1, $2, $3, $4, $5, $6)"
@@ -288,9 +297,6 @@ func logErrorEventHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
-
-	// res2B, _ := json.Marshal(req)
-	// fmt.Println(string(res2B))
 
 	queryString := "INSERT INTO error_events (error_message, filename, funds, server, stock, timestamp, transaction_num, user_id)" +
 		" VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
@@ -430,9 +436,12 @@ func dumpLog(filename string, username string, isUser bool) {
 		logs = append(logs, logEvent)
 	}
 
-	// Sort by timestamp
+	// Sort by timestamp then by transactionNum
 	sort.Slice(logs, func(i, j int) bool {
-		return logs[i].GetTimestamp() < logs[j].GetTimestamp()
+		if logs[i].GetTimestamp() != logs[j].GetTimestamp() {
+			return logs[i].GetTimestamp() < logs[j].GetTimestamp()
+		}
+		return logs[i].GetTransactionNum() < logs[j].GetTransactionNum()
 	})
 
 	// Write to file
