@@ -1,0 +1,9 @@
+FROM golang:alpine
+
+RUN apk update && apk add --no-cache bash git
+
+COPY . /go/src/audit-server/
+RUN go get /go/src/audit-server
+RUN go install /go/src/audit-server
+
+ENTRYPOINT /go/bin/audit-server

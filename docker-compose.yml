@@ -1,0 +1,17 @@
+version: '3'
+services:
+  web:
+    build: web-server/
+  transaction:
+    depends_on:
+      - transaction-db
+    build: transaction-server/
+  transaction-db:
+    build: transaction-server/crate/
+  audit:
+    depends_on:
+      - audit-db
+    build: audit-server/
+  audit-db:
+    build: audit-server/crate/
+
