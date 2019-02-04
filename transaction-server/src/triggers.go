@@ -28,7 +28,10 @@ func fireTrigger(UserID string, Symbol string, method string) {
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare SELECT quantity query")
 	err = stmt.QueryRow(UserID, Symbol).Scan(&quantity)
-	failOnError(err, "Failed to get quantity from "+method+"_amounts")
+	if err != nil {
+		failGracefully(err, "Failed to get quantity from "+method+"_amounts")
+		return
+	}
 
 	// Delete buy/sell amount from user's account
 	queryString = "DELETE FROM " + method + "_amounts " + whereCond
