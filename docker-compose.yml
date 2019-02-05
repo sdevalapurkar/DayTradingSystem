@@ -10,6 +10,8 @@ services:
 
   transaction-db:
     build: transaction-server/crate/
+    ports:
+      - "4200:4200"
     volumes:  
       - transaction-db:/data
 
@@ -20,6 +22,8 @@ services:
 
   audit-db:
     build: audit-server/crate/
+    ports:
+      - "4201:4200"
     volumes:
       - audit-db:/data
 
