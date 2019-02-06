@@ -11,5 +11,9 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# Node
+node_modules/
+
 # Other
 .DS_Store
+

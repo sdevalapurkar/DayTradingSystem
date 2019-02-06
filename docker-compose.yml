@@ -1,0 +1,34 @@
+version: '3'
+services:
+  web:
+    build: web-server/
+
+  transaction:
+    depends_on:
+      - transaction-db
+    build: transaction-server/
+
+  transaction-db:
+    build: transaction-server/crate/
+    ports:
+      - "4200:4200"
+    volumes:  
+      - transaction-db:/data
+
+  audit:
+    depends_on:
+      - audit-db
+    build: audit-server/
+
+  audit-db:
+    build: audit-server/crate/
+    ports:
+      - "4201:4200"
+    volumes:
+      - audit-db:/data
+
+volumes:
+  transaction-db:
+  audit-db:
+ 
+  
