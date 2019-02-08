@@ -49,5 +49,5 @@ for line in lines:
       'filename': commands[1]
     })
   r = requests.post('http://localhost:8123/{}'.format(command_type), data=command_dict)
-  time.sleep(1)
+  time.sleep(0.006)
   print(r.text)
