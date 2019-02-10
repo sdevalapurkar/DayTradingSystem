@@ -6,22 +6,13 @@ import time
 import json
 import threading
 
-if len(sys.argv) != 2:
-    print("usage: ./generator.py <inputfile>")
-    sys.exit(2)
-
-num_threads = 8
-
 def send_requests(*tasks):
     for task in tasks:
         send_request(task)
 
 def send_request(line):
-    line = re.sub(']\s', '],', line)
-    print(line)
     commands = [command.strip() for command in line.split(',')]
     command_type = commands.pop(1)
-
     command_dict = {
       'transactionNum': int(commands[0][1:-1]),
     }
@@ -60,30 +51,46 @@ def send_request(line):
       command_dict.update({
         'filename': commands[1]
       })
-    print(command_dict)
     r = requests.post('http://localhost:8009/{}'.format(command_type), json=command_dict)
-    print(r.text)
+
+if len(sys.argv) != 2:
+    print("usage: ./generator.py <inputfile>")
+    sys.exit(2)
+
+tasks = []
+threads = []
+user_commands = {}
 
 try:
     lines = [line.rstrip('\n') for line in open(sys.argv[1])]
-    step = int(len(lines)/num_threads)+1
-    print(len(lines), step)
-    tasks = []
-    for i in range(0, num_threads):
-        tasks.append(lines[step*i:step*(i+1)])
+    count = len(lines)
 
-    threads = []
+    for l in range(count):
+      line = lines[l]
+      line = re.sub("]\s", "],", line)
+      commands = [command.strip() for command in line.split(',')]
+      user = commands[2]
 
-    print(num_threads, len(lines))
-    for i in range(num_threads):
-        t = threading.Thread(target=send_requests, args=tuple(tasks[i]))
-        t.start()
-        threads.append(t)
+      if commands[1] == 'DUMPLOG' or l == count-1:
+        for user in user_commands:
+            t = threading.Thread(target=send_requests, args=tuple(user_commands[user]))
+            t.start()
+            threads.append(t)
 
-    for t in threads:
-        t.join()
+        for t in threads:
+            t.join()
+
+        time.sleep(.5)
+        dump_t = threading.Thread(target=send_requests, args=tuple([line]))
+        dump_t.start()
+        dump_t.join()
+        user_commands = {}
+
+      else:
+        user_commands[user] = user_commands.get(user, [])
+        user_commands[user].append(line)
+
 
 except IOError as err:
     print("I/O error: {}".format(err))
     sys.exit(2)
-
