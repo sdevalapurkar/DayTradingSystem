@@ -51,7 +51,7 @@ def send_request(line):
       command_dict.update({
         'filename': commands[1]
       })
-    r = requests.post('http://localhost:8009/{}'.format(command_type), json=command_dict)
+    r = requests.post('http://localhost:8123/{}'.format(command_type), json=command_dict)
 
 if len(sys.argv) != 2:
     print("usage: ./generator.py <inputfile>")
