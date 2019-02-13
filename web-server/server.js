@@ -12,7 +12,7 @@ host = 'http://localhost:8080'
 
 app.post('/quote', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  console.log('Quote endpoint');
+  //console.log('Quote endpoint');
   rp({
     method: 'POST',
     uri: host + '/quote',
@@ -20,10 +20,10 @@ app.post('/quote', function(req, res) {
     json: true
   })
     .then(data => {
-      console.log('data is ', data);
+      //console.log('data is ', data);
     })
     .catch(err => {
-      console.log('err is', err);
+      //console.log('err is', err);
     })
   res.send('hey');
 });
@@ -31,28 +31,26 @@ app.post('/quote', function(req, res) {
 app.post('/add', function(req, res) {
   const amount = parseFloat(req.body.amount);
   const transactionNum = parseInt(req.body.transactionNum);
-  console.log('Add endpoint');
-  if (req.body.amount < 0) {
-    res.send('Cannot add negative value')
-  } else {
-    rp({
-      method: 'POST',
-      uri: host + '/add',
-      body: { ...req.body, amount, transactionNum },
-      json: true
+  //console.log('Add endpoint');
+
+  rp({
+    method: 'POST',
+    uri: host + '/add',
+    body: { ...req.body, amount, transactionNum },
+    json: true
+  })
+    .then(data => {
+      //console.log('data is ', data);
     })
-      .then(data => {
-        console.log('data is ', data);
-      })
-      .catch(err => {
-        console.log('err is', err);
-      })
-    res.send('hey')
-  }
+    .catch(err => {
+      //console.log('err is', err);
+    })
+  res.send('hey')
+
 });
 
 app.post('/buy', function(req, res) {
-  console.log('Buy endpoint');
+  //console.log('Buy endpoint');
   const amount = parseFloat(req.body.amount);
   const transactionNum = parseInt(req.body.transactionNum);
   if (req.body.amount < 0) {
@@ -65,10 +63,10 @@ app.post('/buy', function(req, res) {
       json: true
     })
       .then(data => {
-        console.log('data is ', data);
+        //console.log('data is ', data);
       })
       .catch(err => {
-        console.log('err is', err);
+        //console.log('err is', err);
       })
     res.send('hey')
   }
@@ -76,7 +74,7 @@ app.post('/buy', function(req, res) {
 
 app.post('/commit_buy', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  console.log('Commit Buy endpoint');
+  //console.log('Commit Buy endpoint');
   rp({
     method: 'POST',
     uri: host + '/commit_buy',
@@ -84,17 +82,17 @@ app.post('/commit_buy', function(req, res) {
     json: true
   })
     .then(data => {
-      console.log('data is ', data);
+     // console.log('data is ', data);
     })
     .catch(err => {
-      console.log('err is', err);
+     // console.log('err is', err);
     })
   res.send('hey')
 });
 
 app.post('/cancel_buy', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  console.log('Cancel buy endpoint');
+  //console.log('Cancel buy endpoint');
   rp({
     method: 'POST',
     uri: host + '/cancel_buy',
@@ -102,10 +100,10 @@ app.post('/cancel_buy', function(req, res) {
     json: true
   })
     .then(data => {
-      console.log('data is ', data);
+      //console.log('data is ', data);
     })
     .catch(err => {
-      console.log('err is', err);
+      //console.log('err is', err);
     })
   res.send('hey')
 });
@@ -113,7 +111,7 @@ app.post('/cancel_buy', function(req, res) {
 app.post('/sell', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
   const amount = parseFloat(req.body.amount);
-  console.log('Sell endpoint');
+  //console.log('Sell endpoint');
   if (req.body.amount < 0) {
     res.send('Cannot add negative value')
   } else {
@@ -124,10 +122,10 @@ app.post('/sell', function(req, res) {
       json: true
     })
       .then(data => {
-        console.log('data is ', data);
+        //console.log('data is ', data);
       })
       .catch(err => {
-        console.log('err is', err);
+        //console.log('err is', err);
       })
     res.send('hey')
   }
@@ -135,7 +133,7 @@ app.post('/sell', function(req, res) {
 
 app.post('/commit_sell', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  console.log('Commit sell endpoint');
+  //console.log('Commit sell endpoint');
   rp({
     method: 'POST',
     uri: host + '/commit_sell',
@@ -143,17 +141,17 @@ app.post('/commit_sell', function(req, res) {
     json: true
   })
     .then(data => {
-      console.log('data is ', data);
+      //console.log('data is ', data);
     })
     .catch(err => {
-      console.log('err is', err);
+      //console.log('err is', err);
     })
   res.send('hey')
 });
 
 app.post('/cancel_sell', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  console.log('Cancel sell endpoint');
+  //console.log('Cancel sell endpoint');
   rp({
     method: 'POST',
     uri: host + '/cancel_sell',
@@ -161,10 +159,10 @@ app.post('/cancel_sell', function(req, res) {
     json: true
   })
     .then(data => {
-      console.log('data is ', data);
+      //console.log('data is ', data);
     })
     .catch(err => {
-      console.log('err is', err);
+      ////console.log('err is', err);
     })
   res.send('hey')
 });
@@ -172,7 +170,7 @@ app.post('/cancel_sell', function(req, res) {
 app.post('/set_buy_amount', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
   const amount = parseFloat(req.body.amount);
-  console.log('Set buy amount endpoint');
+  //console.log('Set buy amount endpoint');
   if (req.body.amount < 0) {
     res.send('Cannot add negative value')
   } else {
@@ -183,10 +181,10 @@ app.post('/set_buy_amount', function(req, res) {
       json: true
     })
       .then(data => {
-        console.log('data is ', data);
+        //console.log('data is ', data);
       })
       .catch(err => {
-        console.log('err is', err);
+        //console.log('err is', err);
       })
     res.send('hey')
   }
@@ -194,7 +192,7 @@ app.post('/set_buy_amount', function(req, res) {
 
 app.post('/cancel_set_buy', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  console.log('Cancel set buy endpoint');
+  //console.log('Cancel set buy endpoint');
   rp({
     method: 'POST',
     uri: host + '/cancel_set_buy',
@@ -202,10 +200,10 @@ app.post('/cancel_set_buy', function(req, res) {
     json: true
   })
     .then(data => {
-      console.log('data is ', data);
+      //console.log('data is ', data);
     })
     .catch(err => {
-      console.log('err is', err);
+      //console.log('err is', err);
     })
   res.send('hey')
 });
@@ -213,7 +211,7 @@ app.post('/cancel_set_buy', function(req, res) {
 app.post('/set_buy_trigger', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
   const price = parseFloat(req.body.price);
-  console.log('Set sell trigger endpoint');
+  //console.log('Set sell trigger endpoint');
   rp({
     method: 'POST',
     uri: host + '/set_buy_trigger',
@@ -221,10 +219,10 @@ app.post('/set_buy_trigger', function(req, res) {
     json: true
   })
     .then(data => {
-      console.log('data is ', data);
+      //console.log('data is ', data);
     })
     .catch(err => {
-      console.log('err is', err);
+      //console.log('err is', err);
     })
   res.send('hey')
 });
@@ -232,7 +230,7 @@ app.post('/set_buy_trigger', function(req, res) {
 app.post('/set_sell_amount', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
   const amount = parseFloat(req.body.amount);
-  console.log('Set sell amount endpoint');
+  //console.log('Set sell amount endpoint');
   if (req.body.amount < 0) {
     res.send('Cannot add negative value')
   } else {
@@ -243,10 +241,10 @@ app.post('/set_sell_amount', function(req, res) {
       json: true
     })
       .then(data => {
-        console.log('data is ', data);
+        //console.log('data is ', data);
       })
       .catch(err => {
-        console.log('err is', err);
+        //console.log('err is', err);
       })
     res.send('hey')
   }
@@ -255,7 +253,7 @@ app.post('/set_sell_amount', function(req, res) {
 app.post('/set_sell_trigger', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
   const price = parseFloat(req.body.price);
-  console.log('Set sell trigger endpoint');
+  //console.log('Set sell trigger endpoint');
   rp({
     method: 'POST',
     uri: host + '/set_sell_trigger',
@@ -263,17 +261,17 @@ app.post('/set_sell_trigger', function(req, res) {
     json: true
   })
     .then(data => {
-      console.log('data is ', data);
+      //console.log('data is ', data);
     })
     .catch(err => {
-      console.log('err is', err);
+      //console.log('err is', err);
     })
   res.send('hey')
 });
 
 app.post('/cancel_set_sell', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  console.log('Cancel set sell endpoint');
+  //console.log('Cancel set sell endpoint');
   rp({
     method: 'POST',
     uri: host + '/cancel_set_sell',
@@ -281,17 +279,17 @@ app.post('/cancel_set_sell', function(req, res) {
     json: true
   })
     .then(data => {
-      console.log('data is ', data);
+      //console.log('data is ', data);
     })
     .catch(err => {
-      console.log('err is', err);
+      //console.log('err is', err);
     })
   res.send('hey')
 });
 
 app.post('/dumplog', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  console.log('Dumplog endpoint');
+  //console.log('Dumplog endpoint');
   rp({
     method: 'POST',
     uri: host + '/dumplog',
@@ -299,17 +297,17 @@ app.post('/dumplog', function(req, res) {
     json: true
   })
     .then(data => {
-      console.log('data is ', data);
+      //console.log('data is ', data);
     })
     .catch(err => {
-      console.log('err is', err);
+      //console.log('err is', err);
     })
   res.send('hey')
 });
 
 app.post('/display_summary', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  console.log('Display summary endpoint');
+  //console.log('Display summary endpoint');
   rp({
     method: 'POST',
     uri: host + '/display_summary',
@@ -317,10 +315,10 @@ app.post('/display_summary', function(req, res) {
     json: true
   })
     .then(data => {
-      console.log('data is ', data);
+      //console.log('data is ', data);
     })
     .catch(err => {
-      console.log('err is', err);
+      //console.log('err is', err);
     })
   res.send('hey')
 });

@@ -171,7 +171,9 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 	logUserCommand(req.TransactionNum, "transaction-server", "QUOTE", req.UserID, req.Symbol, "", 0.0)
-
+	if req.TransactionNum == 0 {
+		fmt.Println("quote")
+	}
 	// Get quote for the requested stock symbol
 	quote := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 
@@ -195,7 +197,9 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to parse the request")
 
 	logUserCommand(req.TransactionNum, "transaction-server", "BUY", req.UserID, req.Symbol, "", req.Amount)
-
+	if req.TransactionNum == 0 {
+		fmt.Println("buy")
+	}
 	// Get price of requested stock
 	price := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 	// Calculate total cost to buy given amount of given stock
@@ -316,6 +320,9 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to parse request")
 	logUserCommand(req.TransactionNum, "transaction-server", "SELL", req.UserID, req.Symbol, "", req.Amount)
 
+	if req.TransactionNum == 0 {
+		fmt.Println("sell")
+	}
 	price := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 
 	// Calculate the number of the stock to sell
@@ -675,7 +682,7 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to parse request")
 
 	if req.UserID == "" {
-		logUserCommand(req.TransactionNum, "transaction-server", "DUMPLOG", "Admin", "", req.Filename, 0.0)
+		logUserCommand(req.TransactionNum, "transaction-server", "DUMPLOG", "", "", req.Filename, 0.0)
 	} else {
 		logUserCommand(req.TransactionNum, "transaction-server", "DUMPLOG", req.UserID, "", req.Filename, 0.0)
 	}

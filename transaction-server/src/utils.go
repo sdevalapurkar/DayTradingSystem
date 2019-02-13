@@ -46,9 +46,10 @@ func SocketClient(symbol string, userID string) string {
 	failOnError(err, "Failed to connect to quote server")
 
 	payload := fmt.Sprintf("%s,%s\n", symbol, userID)
+	fmt.Println(payload)
 	conn.Write([]byte(payload))
 
-	buff := make([]byte, 1024)
+	buff := make([]byte, 2048)
 	n, _ := conn.Read(buff)
 	return string(buff[:n])
 }
@@ -60,8 +61,8 @@ func SocketClient(symbol string, userID string) string {
 //
 func getQuote(symbol string, transactionNum int, userID string) float64 {
 	// Check if symbol is in cache
-	quote, err := cache.Get(symbol).Result()
-	fmt.Println(err)
+	quote, _ := cache.Get(symbol).Result()
+
 	if quote == "" {
 		//Get quote from the quote server and store it with ttl 60s
 		r := SocketClient(symbol, userID)
@@ -73,10 +74,19 @@ func getQuote(symbol string, transactionNum int, userID string) float64 {
 		}{"", 0.0, 0}
 		spl := strings.Split(r, ",")
 		res.QuoteServerTime, err = strconv.ParseInt(spl[3], 10, 64)
-		res.CryptoKey = spl[4]
+		res.CryptoKey = strings.TrimSuffix(spl[4], "\n")
 		res.Quote, err = strconv.ParseFloat(spl[0], 64)
 		failOnError(err, "failed to get stuff from quote")
-
+		if spl[1] != symbol {
+			fmt.Println("FAILED WITH")
+			fmt.Println(spl[1])
+			fmt.Println(symbol)
+		}
+		if spl[2] != userID {
+			fmt.Println("FAILED WITH")
+			fmt.Println(spl[2])
+			fmt.Println(userID)
+		}
 		logQuoteServer(transactionNum, "transaction-server", userID, symbol, res.CryptoKey, res.QuoteServerTime, res.Quote)
 
 		cache.Set(symbol, strconv.FormatFloat(res.Quote, 'f', -1, 64), 60000000000)
