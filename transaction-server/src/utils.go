@@ -2,8 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
-	"strings"
+	"net/http"
+	"time"
 
 	"strconv"
 
@@ -65,20 +67,23 @@ func getQuote(symbol string, transactionNum int, userID string) float64 {
 
 	if quote == "" {
 		//Get quote from the quote server and store it with ttl 60s
-		r := SocketClient(symbol, userID)
-		var err error
-		res := struct {
-			CryptoKey       string
-			Quote           float64
-			QuoteServerTime int64
-		}{"", 0.0, 0}
-		spl := strings.Split(r, ",")
-		res.QuoteServerTime, err = strconv.ParseInt(spl[3], 10, 64)
-		res.CryptoKey = strings.TrimSuffix(spl[4], "\n")
-		res.Quote, err = strconv.ParseFloat(spl[0], 64)
-		failOnError(err, "failed to get stuff from quote")
+		r, err := http.Get("http://localhost:3000/quote")
+		failOnError(err, "Failed to retrieve quote from quote server")
+		defer r.Body.Close()
 
-		logQuoteServer(transactionNum, "transaction-server", userID, symbol, res.CryptoKey, res.QuoteServerTime, res.Quote)
+		failOnError(err, "Failed to parse quote server response")
+		decoder := json.NewDecoder(r.Body)
+
+		res := struct {
+			CryptoKey string
+			Quote     float64
+		}{"", 0.0}
+
+		err = decoder.Decode(&res)
+		failOnError(err, "Failed to parse quote server response data")
+
+		quoteServerTime := time.Now().UTC().Unix()
+		logQuoteServer(transactionNum, "transaction-server", userID, symbol, res.CryptoKey, quoteServerTime, res.Quote)
 
 		cache.Set(symbol, strconv.FormatFloat(res.Quote, 'f', -1, 64), 60000000000)
 		return res.Quote
