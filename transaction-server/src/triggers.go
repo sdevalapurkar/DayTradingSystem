@@ -38,8 +38,8 @@ func fireTrigger(UserID string, Symbol string, method string) {
 	failOnError(err, "Failed to prepare SELECT quantity query")
 	err = stmt.QueryRow(UserID, Symbol).Scan(&quantity)
 	if err != nil {
-	    failGracefully(err, "Failed to get quantity from "+method+"_amounts")
-	    return
+		failGracefully(err, "Failed to get quantity from "+method+"_amounts")
+		return
 	}
 
 	// Delete buy/sell amount from user's account
@@ -85,6 +85,9 @@ func evalTrigger(UserID string, Symbol string, method string) bool {
 	if err == sql.ErrNoRows {
 		return true
 	} else {
+		if res.transactionNum == 0 {
+			fmt.Println("FAILED TO EVAL TRIGGER")
+		}
 		// If trigger still exists, check the value of the trigger against the price
 		quote := getQuote(Symbol, res.transactionNum, UserID)
 		diff := res.triggerPrice - quote

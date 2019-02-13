@@ -2,12 +2,14 @@ version: '3'
 services:
   web:
     build: web-server/
-
+    ports:
+      - "8123:8123"
   transaction:
     depends_on:
       - transaction-db
     build: transaction-server/
-
+    ports:
+      - "8080:8080"
   transaction-db:
     build: transaction-server/crate/
     ports:
@@ -19,7 +21,8 @@ services:
     depends_on:
       - audit-db
     build: audit-server/
-
+    ports:
+      - "8081:8081"
   audit-db:
     build: audit-server/crate/
     ports:
@@ -27,8 +30,13 @@ services:
     volumes:
       - audit-db:/data
 
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
 volumes:
   transaction-db:
   audit-db:
  
-  
+
+

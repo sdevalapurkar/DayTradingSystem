@@ -38,7 +38,7 @@ func loadDb(dbstring string) *sql.DB {
 }
 
 func createTimestamp() int64 {
-	return time.Now().UTC().Unix()
+	return time.Now().UTC().UnixNano() / int64(time.Millisecond)
 }
 
 // UserCommand data type
@@ -85,7 +85,7 @@ type QuoteServer struct {
 	StockSymbol     string   `xml:"stockSymbol"`
 	Username        string   `xml:"username"`
 	QuoteServerTime int      `xml:"quoteServerTime"`
-	CryptoKey       string   `xml:"cryptoKey"`
+	CryptoKey       string   `xml:"cryptokey"`
 }
 
 func (qs QuoteServer) GetTimestamp() int {

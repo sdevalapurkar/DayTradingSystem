@@ -1,5 +1,5 @@
 crash -c "CREATE TABLE IF NOT EXISTS user_commands(
-	    timestamp INT,
+	    timestamp LONG,
 	    transaction_num INT,
 	    server STRING,
 	    command STRING,
@@ -9,7 +9,7 @@ crash -c "CREATE TABLE IF NOT EXISTS user_commands(
             user_id STRING
         );"
 crash -c "CREATE TABLE IF NOT EXISTS system_events(
-	    timestamp INT,
+	    timestamp LONG,
 	    transaction_num INT,
             server STRING,
 	    user_id STRING,
@@ -19,17 +19,17 @@ crash -c "CREATE TABLE IF NOT EXISTS system_events(
 	    funds FLOAT
         );"
 crash -c "CREATE TABLE IF NOT EXISTS quote_server_events(
-            timestamp INT,
+            timestamp LONG,
 	    transaction_num INT,
 	    server STRING,
 	    user_id STRING,	  
             stock STRING,  
             crypto_key STRING,
-	    quote_server_time INT,
+	    quote_server_time LONG,
 	    price FLOAT    
         );"
 crash -c "CREATE TABLE IF NOT EXISTS account_transactions(
-	    timestamp INT,
+	    timestamp LONG,
 	    server STRING,
 	    transaction_num INT, 
             action STRING,
@@ -37,7 +37,7 @@ crash -c "CREATE TABLE IF NOT EXISTS account_transactions(
             funds FLOAT  
         );"
 crash -c "CREATE TABLE IF NOT EXISTS error_events(
-	    timestamp INT,
+	    timestamp LONG,
 	    server STRING,
 	    transaction_num INT,
             user_id STRING,
