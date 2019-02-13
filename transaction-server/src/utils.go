@@ -77,16 +77,7 @@ func getQuote(symbol string, transactionNum int, userID string) float64 {
 		res.CryptoKey = strings.TrimSuffix(spl[4], "\n")
 		res.Quote, err = strconv.ParseFloat(spl[0], 64)
 		failOnError(err, "failed to get stuff from quote")
-		if spl[1] != symbol {
-			fmt.Println("FAILED WITH")
-			fmt.Println(spl[1])
-			fmt.Println(symbol)
-		}
-		if spl[2] != userID {
-			fmt.Println("FAILED WITH")
-			fmt.Println(spl[2])
-			fmt.Println(userID)
-		}
+
 		logQuoteServer(transactionNum, "transaction-server", userID, symbol, res.CryptoKey, res.QuoteServerTime, res.Quote)
 
 		cache.Set(symbol, strconv.FormatFloat(res.Quote, 'f', -1, 64), 60000000000)
