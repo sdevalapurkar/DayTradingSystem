@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"strconv"
@@ -20,6 +21,13 @@ func loadDb() *sql.DB {
 	// If can't connect to DB
 	failOnError(err, "Couldn't connect to CrateDB")
 	return db
+}
+
+func runningInDocker() bool {
+	if _, err := os.Stat("/.dockerenv"); !os.IsNotExist(err) {
+		return true
+	}
+	return false
 }
 
 // Checks and panics on error
