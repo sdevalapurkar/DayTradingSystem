@@ -15,9 +15,22 @@ import (
 )
 
 var (
-	db          = loadDb(auditstring)
-	auditstring = "http://localhost:4201"
+	auditstring = func() string {
+		if runningInDocker() {
+			return "http://audit-db:4200"
+		}
+		return "http://localhost:4201"
+	}()
+
+	db = loadDb(auditstring)
 )
+
+func runningInDocker() bool {
+	if _, err := os.Stat("/.dockerenv"); !os.IsNotExist(err) {
+		return true
+	}
+	return false
+}
 
 func failOnError(err error, msg string) {
 	if err != nil {
