@@ -3,7 +3,7 @@ services:
   web:
     build: 
       context: web-server/
-      dockerfile: Dockerfile-local
+      dockerfile: Dockerfile
     ports:
       - "8123:8123"
   transaction:
@@ -11,13 +11,13 @@ services:
       - transaction-db
     build: 
       context: transaction-server/
-      dockerfile: Dockerfile-local
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
   transaction-db:
     build: 
       context: transaction-server/crate/
-      dockerfile: Dockerfile-local
+      dockerfile: Dockerfile
     ports:
       - "4200:4200"
     volumes:  
@@ -27,13 +27,13 @@ services:
       - audit-db
     build: 
       context: audit-server/
-      dockerfile: Dockerfile-local
+      dockerfile: Dockerfile
     ports:
       - "8081:8081"
   audit-db:
     build: 
       context: audit-server/crate/
-      dockerfile: Dockerfile-local
+      dockerfile: Dockerfile
     ports:
       - "4201:4200"
     volumes:
