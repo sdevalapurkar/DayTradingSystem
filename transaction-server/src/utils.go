@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"strconv"
@@ -74,27 +75,48 @@ func getQuote(symbol string, transactionNum int, userID string) float64 {
 	quote, _ := cache.Get(symbol).Result()
 
 	if quote == "" {
-		//Get quote from the quote server and store it with ttl 60s
-		r, err := http.Get("http://localhost:3000/quote")
-		failOnError(err, "Failed to retrieve quote from quote server")
-		defer r.Body.Close()
+		if os.Getenv("DEBUG") == "TRUE" {
 
-		failOnError(err, "Failed to parse quote server response")
-		decoder := json.NewDecoder(r.Body)
+			//Get quote from the quote server and store it with ttl 60s
+			r, err := http.Get("http://localhost:3000/quote")
+			failOnError(err, "Failed to retrieve quote from quote server")
+			defer r.Body.Close()
 
-		res := struct {
-			CryptoKey string
-			Quote     float64
-		}{"", 0.0}
+			failOnError(err, "Failed to parse quote server response")
+			decoder := json.NewDecoder(r.Body)
 
-		err = decoder.Decode(&res)
-		failOnError(err, "Failed to parse quote server response data")
+			res := struct {
+				CryptoKey string
+				Quote     float64
+			}{"", 0.0}
 
-		quoteServerTime := time.Now().UTC().Unix()
-		logQuoteServer(transactionNum, "transaction-server", userID, symbol, res.CryptoKey, quoteServerTime, res.Quote)
+			err = decoder.Decode(&res)
+			failOnError(err, "Failed to parse quote server response data")
 
-		cache.Set(symbol, strconv.FormatFloat(res.Quote, 'f', -1, 64), 60000000000)
-		return res.Quote
+			quoteServerTime := time.Now().UTC().Unix()
+			logQuoteServer(transactionNum, "transaction-server", userID, symbol, res.CryptoKey, quoteServerTime, res.Quote)
+
+			cache.Set(symbol, strconv.FormatFloat(res.Quote, 'f', -1, 64), 60000000000)
+			return res.Quote
+		} else {
+			r := SocketClient(symbol, userID)
+			var err error
+
+			res := struct {
+				CryptoKey       string
+				Quote           float64
+				QuoteServerTime int64
+			}{"", 0.0, 0}
+			spl := strings.Split(r, ",")
+			res.QuoteServerTime, err = strconv.ParseInt(spl[3], 10, 64)
+			res.CryptoKey = strings.TrimSuffix(spl[4], "\n")
+			res.Quote, err = strconv.ParseFloat(spl[0], 64)
+			failOnError(err, "failed to get stuff from quote")
+
+			logQuoteServer(transactionNum, "transaction-server", userID, symbol, res.CryptoKey, res.QuoteServerTime, res.Quote)
+			cache.Set(symbol, strconv.FormatFloat(res.Quote, 'f', -1, 64), 60000000000)
+			return res.Quote
+		}
 	} else {
 		// Otherwise, return the cached value
 		quote, err := strconv.ParseFloat(quote, 32)
