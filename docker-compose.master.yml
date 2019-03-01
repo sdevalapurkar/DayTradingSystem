@@ -1,0 +1,50 @@
+version: '3'
+services:
+  web:
+    build: 
+      context: web-server/
+      dockerfile: Dockerfile-local
+    ports:
+      - "8123:8123"
+  transaction:
+    depends_on:
+      - transaction-db
+    build: 
+      context: transaction-server/
+      dockerfile: Dockerfile-local
+    ports:
+      - "8080:8080"
+  transaction-db:
+    build: 
+      context: transaction-server/crate/
+      dockerfile: Dockerfile-local
+    ports:
+      - "4200:4200"
+    volumes:  
+      - transaction-db:/data
+  audit:
+    depends_on:
+      - audit-db
+    build: 
+      context: audit-server/
+      dockerfile: Dockerfile-local
+    ports:
+      - "8081:8081"
+  audit-db:
+    build: 
+      context: audit-server/crate/
+      dockerfile: Dockerfile-local
+    ports:
+      - "4201:4200"
+    volumes:
+      - audit-db:/data
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+volumes:
+  transaction-db:
+  audit-db:
+ 
+
+
