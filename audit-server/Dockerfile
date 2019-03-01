@@ -15,6 +15,10 @@ RUN git config --global https.proxy http://192.168.1.1:3128
 RUN git config --global http.sslVerify false
 
 COPY . /go/src/audit-server/
+
+ENV http_proxy ''
+ENV https_proxy ''
+
 RUN go get /go/src/audit-server
 RUN go install /go/src/audit-server
 

@@ -14,6 +14,8 @@ RUN git config --global https.proxy http://192.168.1.1:3128
 RUN git config --global http.sslVerify false
 
 COPY ./src/ /go/src/transaction-server/
+ENV http_proxy ''
+ENV https_proxy ''
 RUN go get /go/src/transaction-server 
 RUN go install /go/src/transaction-server
 
