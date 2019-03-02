@@ -57,7 +57,7 @@ func SocketClient(symbol string, userID string) string {
 	failOnError(err, "Failed to connect to quote server")
 
 	payload := fmt.Sprintf("%s,%s\n", symbol, userID)
-	fmt.Println(payload)
+	
 	conn.Write([]byte(payload))
 
 	buff := make([]byte, 2048)

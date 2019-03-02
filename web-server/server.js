@@ -41,7 +41,6 @@ app.use(bodyParser.json());
 
 app.post('/quote', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  //console.log('Quote endpoint');
   rp({
     method: 'POST',
     uri: host + '/quote',
@@ -49,7 +48,6 @@ app.post('/quote', function(req, res) {
     json: true
   })
     .then(data => {
-      //console.log('data is ', data);
     })
     .catch(err => {
       console.log('err is', err);
@@ -60,7 +58,6 @@ app.post('/quote', function(req, res) {
 app.post('/add', function(req, res) {
   const amount = parseFloat(req.body.amount);
   const transactionNum = parseInt(req.body.transactionNum);
-  console.log('Add endpoint');
 
   rp({
     method: 'POST',

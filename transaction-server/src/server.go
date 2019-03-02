@@ -339,8 +339,8 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 	defer stmt.Close()
 
 	if err != nil {
-		fmt.Println("Failed to retrieve number of given stock owned by user")
-		w.Write([]byte("Failed to retrieve number of given stock owned by user"))
+		//fmt.Println("Failed to retrieve number of given stock owned by user")
+		//w.Write([]byte("Failed to retrieve number of given stock owned by user"))
 		return
 	}
 
