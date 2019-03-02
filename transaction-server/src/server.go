@@ -58,8 +58,10 @@ func logSystemEvent(transactionNum int, server string, command string, username 
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r, err := http.Post(auditServer+"/logSystemEvent", "application/json; charset=utf-8", b)
+	if err != nil {
 
-	failOnError(err, "Failed to log system event")
+		failGracefully(err, "Failed to log system event")
+	}
 	defer r.Body.Close()
 }
 
@@ -78,7 +80,10 @@ func logUserCommand(transactionNum int, server string, command string, username 
 	json.NewEncoder(b).Encode(req)
 	r, err := http.Post(auditServer+"/logUserCommand", "application/json; charset=utf-8", b)
 
-	failOnError(err, "Failed to log user command")
+        if err != nil {
+
+                failGracefully(err, "Failed to log system event")
+        }
 	defer r.Body.Close()
 }
 
@@ -94,8 +99,11 @@ func logAccountTransaction(transactionNum int, server string, action string, use
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r, err := http.Post(auditServer+"/logAccountTransaction", "application/json; charset=utf-8", b)
+        if err != nil {
 
-	failOnError(err, "Failed to log account transaction")
+                failGracefully(err, "Failed to log system event")
+        }
+
 	defer r.Body.Close()
 }
 
@@ -113,8 +121,11 @@ func logQuoteServer(transactionNum int, server string, username string, stock st
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r, err := http.Post(auditServer+"/logQuoteServer", "application/json; charset=utf-8", b)
+        if err != nil {
 
-	failOnError(err, "Failed to log quote server")
+                failGracefully(err, "Failed to log system event")
+        }
+
 	defer r.Body.Close()
 }
 
@@ -130,7 +141,11 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Read request json into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse the request")
+        if err != nil {
+
+                failGracefully(err, "Failed to log system event")
+        }
+
 
 	logUserCommand(req.TransactionNum, "transaction-server", "ADD", req.UserID, "", "", req.Amount)
 
@@ -145,9 +160,17 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		"ON CONFLICT (user_id) DO UPDATE SET balance = balance + $2"
 
 	stmt, err := db.Prepare(queryString)
-	failOnError(err, "Failed to prepare query")
+        if err != nil {
+
+                failGracefully(err, "Failed to prep query")
+        }
+
 	res, err := stmt.Exec(req.UserID, req.Amount)
-	failOnError(err, "Failed to add balance")
+        if err != nil {
+
+                failGracefully(err, "Failed to do something with query")
+        }
+
 
 	// Check the query actually did something (because this one should always modify something, unless add 0..?)
 	numrows, err := res.RowsAffected()

@@ -7,7 +7,7 @@ COPY . /
 
 #ENTRYPOINT ["sh", "/crate_entry_point.sh"]
 RUN ln -sf /usr/bin/python3.6 /usr/bin/python3
-RUN export CRATE_HEAP_SIZE=2g
+ENV CRATE_HEAP_SIZE=2000M
 EXPOSE 4201
 CMD ["crate"]
 

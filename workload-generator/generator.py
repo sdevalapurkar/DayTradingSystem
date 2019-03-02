@@ -9,6 +9,7 @@ import threading
 def send_requests(*tasks):
     for task in tasks:
         send_request(task)
+        time.sleep(1.9)
 
 def send_request(line):
     commands = [command.strip() for command in line.split(',')]
@@ -80,7 +81,7 @@ try:
         for t in threads:
             t.join()
 
-        time.sleep(.5)
+        time.sleep(80000)
         dump_t = threading.Thread(target=send_requests, args=tuple([line]))
         dump_t.start()
         dump_t.join()

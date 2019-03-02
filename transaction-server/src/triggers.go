@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
+
 	"strconv"
 	"time"
 )
@@ -19,18 +19,24 @@ func fireTrigger(UserID string, Symbol string, method string) {
 	var transactionNum int
 	queryString := "SELECT transaction_num FROM triggers WHERE user_id = $1 AND symbol = $2 AND method = $3;"
 	stmt, err := db.Prepare(queryString)
-	failOnError(err, "Failed to prepare transactionNum query")
+	if err != nil {
+		failGracefully(err, "Failed to prepare transactionNum query")
+		return
+	}
 	err = stmt.QueryRow(UserID, Symbol, method).Scan(&transactionNum)
 
 	if err != nil {
 		failGracefully(err, "Failed to get transactionNum")
-
+		return
 	}
 
 	// Consume trigger
 	queryString = "DELETE FROM triggers WHERE user_id = $1 AND symbol = $2 AND method = $3;"
 	rows, err := db.Query(queryString, UserID, Symbol, method)
-	failOnError(err, "Failed to delete trigger after firing")
+	if err != nil{
+		failGracefully(err, "Failed to delete trigger after firing")
+		return
+	}
 	defer rows.Close()
 
 	whereCond := "WHERE user_id = $1 AND symbol = $2"
@@ -39,7 +45,10 @@ func fireTrigger(UserID string, Symbol string, method string) {
 	// Get quantity of stock to buy/sell
 	queryString = "SELECT quantity FROM " + method + "_amounts " + whereCond
 	stmt, err = db.Prepare(queryString)
-	failOnError(err, "Failed to prepare SELECT quantity query")
+	if err != nil {
+		failGracefully(err, "Failed to prepare SELECT quantity query")
+		return
+	}
 	err = stmt.QueryRow(UserID, Symbol).Scan(&quantity)
 	if err != nil {
 		failGracefully(err, "Failed to get quantity from "+method+"_amounts")
@@ -49,7 +58,10 @@ func fireTrigger(UserID string, Symbol string, method string) {
 	// Delete buy/sell amount from user's account
 	queryString = "DELETE FROM " + method + "_amounts " + whereCond
 	rows, err = db.Query(queryString, UserID, Symbol)
-	failOnError(err, "Failed to delete "+method+" amount after trigger fire")
+	if err != nil {
+
+		failGracefully(err, "Failed to delete "+method+" amount after trigger fire")
+	}
 	defer rows.Close()
 
 	// Add/subtract the stocks to user's account
@@ -72,8 +84,10 @@ func evalTrigger(UserID string, Symbol string, method string) bool {
 	queryString := "SELECT price, transaction_num FROM triggers WHERE symbol = $1 AND user_id = $2 and method = $3;"	
 
 	stmt, err := db.Prepare(queryString)
-	failOnError(err, "Failed to prepare query")
+	if err != nil {
 
+		failGracefully(err, "Failed to prepare query")
+	}
 	res := struct {
 		triggerPrice   float64
 		transactionNum int
@@ -116,7 +130,7 @@ func monitorTrigger(UserID string, Symbol string, method string) {
 	ticker := time.NewTicker(10 * time.Second)
 
 	// Every time the ticker fires, check the trigger
-	for i := range ticker.C {
+	for _ = range ticker.C {
 		//fmt.Println("Tick at", i)
 		done := evalTrigger(UserID, Symbol, method)
 		if done {
