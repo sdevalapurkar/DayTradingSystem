@@ -13,41 +13,36 @@ import (
 	_ "github.com/herenow/go-crate"
 )
 
-//var host = "http://192.168.99.100"
-var auditServer = "http://localhost:8081"
-
-var host = "http://localhost"
-
 var (
-	dbstring = host + ":4200/"
-	db       = loadDb()
-	cache    = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+	dbstring = func() string {
+		if runningInDocker() {
+			return "http://transaction-db:4200"
+		}
+		return "http://localhost:4200"
+	}()
+
+	db = loadDb()
+
+	auditServer = func() string {
+		if runningInDocker() {
+			return "http://audit:8081"
+		}
+		return "http://localhost:8081"
+	}()
+
+	redishost = func() string {
+		if runningInDocker() {
+			return "http://redis:6379"
+		}
+		return "http://localhost:6379"
+	}()
+
+	cache = redis.NewClient(&redis.Options{
+		Addr:     redishost,
 		Password: "",
 		DB:       0,
 	})
 )
-
-// // Test connection to Redis
-// func RedisClient() {
-// 	err := cache.Set("key", "value", 0).Err()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	val, err := cache.Get("key").Result()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	val2, err := cache.Get("key2").Result()
-// 	if err == redis.Nil {
-// 		fmt.Println("key2 does not exist")
-// 	} else if err != nil {
-// 		panic(err)
-// 	} else {
-// 		fmt.Println("key2", val2)
-// 	}
-// }
 
 func logSystemEvent(transactionNum int, server string, command string, username string, stock string, filename string, funds float64) {
 	req := struct {
@@ -63,8 +58,10 @@ func logSystemEvent(transactionNum int, server string, command string, username 
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r, err := http.Post(auditServer+"/logSystemEvent", "application/json; charset=utf-8", b)
+	if err != nil {
 
-	failOnError(err, "Failed to log system event")
+		failGracefully(err, "Failed to log system event")
+	}
 	defer r.Body.Close()
 }
 
@@ -83,7 +80,10 @@ func logUserCommand(transactionNum int, server string, command string, username 
 	json.NewEncoder(b).Encode(req)
 	r, err := http.Post(auditServer+"/logUserCommand", "application/json; charset=utf-8", b)
 
-	failOnError(err, "Failed to log user command")
+        if err != nil {
+
+                failGracefully(err, "Failed to log system event")
+        }
 	defer r.Body.Close()
 }
 
@@ -99,8 +99,11 @@ func logAccountTransaction(transactionNum int, server string, action string, use
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r, err := http.Post(auditServer+"/logAccountTransaction", "application/json; charset=utf-8", b)
+        if err != nil {
 
-	failOnError(err, "Failed to log account transaction")
+                failGracefully(err, "Failed to log system event")
+        }
+
 	defer r.Body.Close()
 }
 
@@ -118,8 +121,11 @@ func logQuoteServer(transactionNum int, server string, username string, stock st
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r, err := http.Post(auditServer+"/logQuoteServer", "application/json; charset=utf-8", b)
+        if err != nil {
 
-	failOnError(err, "Failed to log quote server")
+                failGracefully(err, "Failed to log system event")
+        }
+
 	defer r.Body.Close()
 }
 
@@ -135,9 +141,18 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Read request json into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse the request")
+        if err != nil {
+
+                failGracefully(err, "Failed to log system event")
+        }
+
 
 	logUserCommand(req.TransactionNum, "transaction-server", "ADD", req.UserID, "", "", req.Amount)
+
+	if req.Amount < 0 {
+		panic("Can't add a negative balance")
+	}
+
 	logAccountTransaction(req.TransactionNum, "transaction-server", "add", req.UserID, req.Amount)
 
 	// Insert new user if they don't already exist, otherwise update their balance
@@ -145,9 +160,17 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		"ON CONFLICT (user_id) DO UPDATE SET balance = balance + $2"
 
 	stmt, err := db.Prepare(queryString)
-	failOnError(err, "Failed to prepare query")
+        if err != nil {
+
+                failGracefully(err, "Failed to prep query")
+        }
+
 	res, err := stmt.Exec(req.UserID, req.Amount)
-	failOnError(err, "Failed to add balance")
+        if err != nil {
+
+                failGracefully(err, "Failed to do something with query")
+        }
+
 
 	// Check the query actually did something (because this one should always modify something, unless add 0..?)
 	numrows, err := res.RowsAffected()
@@ -171,9 +194,7 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 	logUserCommand(req.TransactionNum, "transaction-server", "QUOTE", req.UserID, req.Symbol, "", 0.0)
-	if req.TransactionNum == 0 {
-		fmt.Println("quote")
-	}
+
 	// Get quote for the requested stock symbol
 	quote := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 
@@ -197,9 +218,11 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to parse the request")
 
 	logUserCommand(req.TransactionNum, "transaction-server", "BUY", req.UserID, req.Symbol, "", req.Amount)
-	if req.TransactionNum == 0 {
-		fmt.Println("buy")
+
+	if req.Amount < 0 {
+		panic("Can't purchase a negative amount")
 	}
+
 	// Get price of requested stock
 	price := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 	// Calculate total cost to buy given amount of given stock
@@ -320,9 +343,6 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to parse request")
 	logUserCommand(req.TransactionNum, "transaction-server", "SELL", req.UserID, req.Symbol, "", req.Amount)
 
-	if req.TransactionNum == 0 {
-		fmt.Println("sell")
-	}
 	price := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 
 	// Calculate the number of the stock to sell
@@ -342,8 +362,8 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 	defer stmt.Close()
 
 	if err != nil {
-		fmt.Println("Failed to retrieve number of given stock owned by user")
-		w.Write([]byte("Failed to retrieve number of given stock owned by user"))
+		//fmt.Println("Failed to retrieve number of given stock owned by user")
+		//w.Write([]byte("Failed to retrieve number of given stock owned by user"))
 		return
 	}
 

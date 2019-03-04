@@ -3,16 +3,44 @@ const bodyParser = require('body-parser');
 const rp = require('request-promise');
 const app = express();
 const port = 8123;
+
+var isDocker;
+
+function hasDockerEnv() {
+	try {
+		fs.statSync('/.dockerenv');
+		return true;
+	} catch (err) {
+		return false;
+	}
+}
+
+function hasDockerCGroup() {
+	try {
+		return fs.readFileSync('/proc/self/cgroup', 'utf8').indexOf('docker') !== -1;
+	} catch (err) {
+		return false;
+	}
+}
+
+function runningInDocker() {
+	return hasDockerEnv() || hasDockerCGroup();
+}
+
+host = 'http://transaction:8080'
+
+if (runningInDocker()) {
+  host = 'http://transaction:8080'
+}
+
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
 
-host = 'http://localhost:8080'
 
 app.post('/quote', function(req, res) {
   const transactionNum = parseInt(req.body.transactionNum);
-  //console.log('Quote endpoint');
   rp({
     method: 'POST',
     uri: host + '/quote',
@@ -20,10 +48,9 @@ app.post('/quote', function(req, res) {
     json: true
   })
     .then(data => {
-      //console.log('data is ', data);
     })
     .catch(err => {
-      //console.log('err is', err);
+      console.log('err is', err);
     })
   res.send('hey');
 });
@@ -31,7 +58,6 @@ app.post('/quote', function(req, res) {
 app.post('/add', function(req, res) {
   const amount = parseFloat(req.body.amount);
   const transactionNum = parseInt(req.body.transactionNum);
-  //console.log('Add endpoint');
 
   rp({
     method: 'POST',
@@ -43,7 +69,7 @@ app.post('/add', function(req, res) {
       //console.log('data is ', data);
     })
     .catch(err => {
-      //console.log('err is', err);
+      console.log('err is', err);
     })
   res.send('hey')
 
