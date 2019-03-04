@@ -12,7 +12,7 @@ import (
 	"strconv"
 
 	"net"
-
+	"github.com/go-redis/redis"
 	_ "github.com/herenow/go-crate"
 )
 
@@ -55,9 +55,7 @@ func SocketClient(symbol string, userID string) string {
 	defer conn.Close()
 
 	failOnError(err, "Failed to connect to quote server")
-
 	payload := fmt.Sprintf("%s,%s\n", symbol, userID)
-	
 	conn.Write([]byte(payload))
 
 	buff := make([]byte, 2048)
@@ -72,9 +70,11 @@ func SocketClient(symbol string, userID string) string {
 //
 func getQuote(symbol string, transactionNum int, userID string) float64 {
 	// Check if symbol is in cache
-	quote, _ := cache.Get(symbol).Result()
+        quote, err := cache.Get(symbol).Result()
+        
 
-	if quote == "" {
+	if err == redis.Nil {
+
 		if os.Getenv("DEBUG") == "TRUE" {
 
 			//Get quote from the quote server and store it with ttl 60s
@@ -118,6 +118,7 @@ func getQuote(symbol string, transactionNum int, userID string) float64 {
 			return res.Quote
 		}
 	} else {
+		
 		// Otherwise, return the cached value
 		quote, err := strconv.ParseFloat(quote, 32)
 		failOnError(err, "Failed to parse float from quote")

@@ -32,7 +32,7 @@ var (
 
 	redishost = func() string {
 		if runningInDocker() {
-			return "http://redis:6379"
+			return "redis:6379"
 		}
 		return "http://localhost:6379"
 	}()
@@ -80,7 +80,9 @@ func logUserCommand(transactionNum int, server string, command string, username 
 	json.NewEncoder(b).Encode(req)
 	r, err := http.Post(auditServer+"/logUserCommand", "application/json; charset=utf-8", b)
 
-	if err != nil {
+	for err != nil {
+		
+		r, err = http.Post(auditServer+"/logUserCommand", "application/json; charset=utf-8", b)
 
 		failGracefully(err, "Failed to log user command")
 	}
