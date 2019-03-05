@@ -9,7 +9,7 @@ import threading
 def send_requests(*tasks):
     for task in tasks:
         send_request(task)
-        time.sleep(1.9)
+        time.sleep(.1)
 
 def send_request(line):
     commands = [command.strip() for command in line.split(',')]
@@ -52,7 +52,7 @@ def send_request(line):
       command_dict.update({
         'filename': commands[1]
       })
-    r = requests.post('http://localhost:8123/{}'.format(command_type), json=command_dict)
+    r = requests.post("http://localhost:8123/{}".format(command_type.lower()), json=command_dict)
 
 if len(sys.argv) != 2:
     print("usage: ./generator.py <inputfile>")

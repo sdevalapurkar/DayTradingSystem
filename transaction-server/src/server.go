@@ -151,7 +151,8 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	logUserCommand(req.TransactionNum, "transaction-server", "ADD", req.UserID, "", "", req.Amount)
 
 	if req.Amount < 0 {
-		panic("Can't add a negative balance")
+		fmt.Println("Can't add a negative balance")
+		return
 	}
 
 	logAccountTransaction(req.TransactionNum, "transaction-server", "add", req.UserID, req.Amount)
