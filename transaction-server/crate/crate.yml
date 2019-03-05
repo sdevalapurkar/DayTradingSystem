@@ -1,0 +1,16 @@
+# Crate Configuration
+
+network.host: _local_,_site_
+cluster.name: transaction
+node.name: node1
+network.publish_host: 192.168.1.182
+discovery.zen.ping.unicast.hosts:
+    - 192.168.1.185:4300
+
+# Paths
+path:
+  logs: /data/log
+  data: /data/data
+blobs:
+  path: /data/blobs
+

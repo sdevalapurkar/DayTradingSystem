@@ -20,6 +20,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "4200:4200"
+      - "4300:4300"
     volumes:  
       - transaction-db:/data
   audit:
@@ -36,6 +37,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "4201:4200"
+      - "4301:4300"
     volumes:
       - audit-db:/data
   redis:
