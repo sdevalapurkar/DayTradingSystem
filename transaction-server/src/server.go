@@ -178,7 +178,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	if numrows < 1 {
 		failOnError(err, "Failed to add balance")
 	}
-	//w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 }
 
 // Tested
@@ -262,6 +262,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		// Add buy transaction to front of user's transaction list
 		cache.LPush(req.UserID+":buy", req.Symbol+":"+strconv.Itoa(buyNumber))
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
 // Tested
@@ -291,6 +292,7 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Add new stocks to user's account
 	buyStock(req.UserID, tasks[0], tasks[1], req.TransactionNum)
+	w.WriteHeader(http.StatusOK)
 }
 
 func buyStock(UserID string, Symbol string, quantity string, transactionNum int) {
@@ -327,6 +329,7 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 	cache.LPop(req.UserID + ":buy")
 
 	logUserCommand(req.TransactionNum, "transaction-server", "CANCEL_BUY", req.UserID, "", "", 0.0)
+	w.WriteHeader(http.StatusOK)
 }
 
 // Tested
@@ -364,7 +367,7 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		//fmt.Println("Failed to retrieve number of given stock owned by user")
-		//w.Write([]byte("Failed to retrieve number of given stock owned by user"))
+		w.Write([]byte("Failed to retrieve number of given stock owned by user"))
 		return
 	}
 
@@ -385,6 +388,7 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(salePrice)
 		cache.LPush(req.UserID+":sell", req.Symbol+":"+strconv.FormatFloat(salePrice, 'f', -1, 64))
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
 // Tested
@@ -420,6 +424,8 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 		failGracefully(err, "Failed to refund money for stock sale")
 		return
 	}
+	w.WriteHeader(http.StatusOK)
+
 }
 
 func sellStock(UserID string, Symbol string, quantity string, transactionNum int) {
@@ -458,6 +464,7 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 	logUserCommand(req.TransactionNum, "transaction-server", "CANCEL_SELL", req.UserID, "", "", 0.0)
 
 	cache.LPop(req.UserID + ":sell")
+	w.WriteHeader(http.StatusOK)
 }
 
 // Tested
@@ -495,6 +502,7 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 		failGracefully(err, "Failed to update buy amount")
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
 // Tested
@@ -528,7 +536,7 @@ func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
 	rows2, err := db.Query(queryString2, req.UserID, req.Symbol)
 	defer rows2.Close()
 	if err != nil {
-		fmt.Println("Failed to delete trigger")
+		w.Write([]byte("Failed to delete trigger"))
 		return
 	}
 }
@@ -572,6 +580,7 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go monitorTrigger(req.UserID, req.Symbol, "buy")
+	w.WriteHeader(http.StatusOK)
 }
 
 // Tested
@@ -610,6 +619,7 @@ func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Failed to update sell amount"))
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
 // Tested
@@ -651,6 +661,7 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go monitorTrigger(req.UserID, req.Symbol, "sell")
+	w.WriteHeader(http.StatusOK)
 }
 
 // Tested
@@ -687,6 +698,7 @@ func cancelSetSellHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer rows2.Close()
+	w.WriteHeader(http.StatusOK)
 }
 
 func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
@@ -714,12 +726,15 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	if req.UserID == "" {
 		res, err := http.Post(auditServer+"/dumpLog", "application/json; charset=utf-8", b)
 		failOnError(err, "Failed to retrieve quote from quote server")
+		w.Write([]byte("Failed to log"))
 		defer res.Body.Close()
 	} else {
 		res, err := http.Post(auditServer+"/dumpUserLog", "application/json; charset=utf-8", b)
 		failOnError(err, "Failed to retrieve quote from quote server")
+		w.Write([]byte("Failed to log"))
 		defer res.Body.Close()
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
@@ -734,6 +749,7 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 	logUserCommand(req.TransactionNum, "transaction-server", "DISPLAY_SUMMARY", req.UserID, "", "", 0.0)
+	w.WriteHeader(http.StatusOK)
 }
 
 func main() {
