@@ -734,7 +734,6 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Failed to log"))
 		defer res.Body.Close()
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {

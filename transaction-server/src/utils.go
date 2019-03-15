@@ -55,12 +55,17 @@ func SocketClient(symbol string, userID string) string {
 	defer conn.Close()
 
 	failOnError(err, "Failed to connect to quote server")
-	payload := fmt.Sprintf("%s,%s\n", symbol, userID)
+	payload := fmt.Sprintf("%s,%s\r", symbol, userID)
 	conn.Write([]byte(payload))
 
 	buff := make([]byte, 2048)
-	n, _ := conn.Read(buff)
-	return string(buff[:n])
+	n, err := conn.Read(buff)
+	if err != nil {
+		fmt.Println("Error reading stock quote from quote server")
+	}
+
+	quote := string(buff[:n])
+	return quote
 }
 
 // Returns a fresh quote for a given stock symbol.
@@ -109,7 +114,7 @@ func getQuote(symbol string, transactionNum int, userID string) float64 {
 			}{"", 0.0, 0}
 			spl := strings.Split(r, ",")
 			res.QuoteServerTime, err = strconv.ParseInt(spl[3], 10, 64)
-			res.CryptoKey = strings.TrimSuffix(spl[4], "\n")
+			res.CryptoKey = spl[4]
 			res.Quote, err = strconv.ParseFloat(spl[0], 64)
 			failOnError(err, "failed to get stuff from quote")
 

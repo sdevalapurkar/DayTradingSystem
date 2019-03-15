@@ -37,6 +37,8 @@ func failOnError(err error, msg string) {
 func addHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
 
+    w.WriteHeader(http.StatusOK)
+
     req := struct {
         UserID         string
         Amount         float64
@@ -61,7 +63,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 
 func quoteHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
 	UserID         string
 	Symbol         string
@@ -85,7 +87,7 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 
 func buyHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         UserID         string
         Amount         float64 // dolar amount of a stock to buy
@@ -110,7 +112,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 
 func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         UserID         string
         TransactionNum int
@@ -133,7 +135,7 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         UserID         string
         TransactionNum int
@@ -156,7 +158,7 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 func sellHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         UserID         string
         Amount         float64 // Dollar value to sell
@@ -181,7 +183,7 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 
 func commitSellHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         UserID         string
         TransactionNum int
@@ -204,7 +206,7 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 
 func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         UserID         string
         TransactionNum int
@@ -227,7 +229,7 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 
 func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         UserID         string  // id of the user buying
         Symbol         string  // symbol of the stock to buy
@@ -252,7 +254,7 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 
 func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         UserID         string
         Symbol         string
@@ -276,7 +278,7 @@ func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         UserID         string
         Symbol         string
@@ -301,7 +303,7 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 
 func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         UserID         string
         Symbol         string
@@ -326,7 +328,7 @@ func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 
 func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         UserID         string
         Symbol         string
@@ -351,7 +353,7 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 
 func cancelSetSellHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         UserID         string
         Symbol         string
@@ -375,7 +377,7 @@ func cancelSetSellHandler(w http.ResponseWriter, r *http.Request) {
 
 func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         TransactionNum int
         Filename       string
@@ -399,7 +401,7 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 
 func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
     decoder := json.NewDecoder(r.Body)
-
+    w.WriteHeader(http.StatusOK)
     req := struct {
         TransactionNum int
         UserID         string
