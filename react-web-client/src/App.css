@@ -1,0 +1,149 @@
+.header-color {
+  height: 80px;
+  background: #833ab4;  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #fcb045, #fd1d1d, #833ab4);  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #fcb045, #fd1d1d, #833ab4); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.team-div {
+  padding-top: 130px;
+  display: block;
+  margin-left: 35px;
+}
+
+.modal {
+  text-align: center;
+  background-color: #FFE4B5;
+  border-radius: 5px;
+  max-width: 300px;
+  min-height: 30px;
+  margin: 0 auto;
+  padding: 25px;
+  margin-top: 100px;
+}
+
+.close-modal {
+  padding-top: 25px;
+}
+
+.large-img {
+  padding-top: 15px;
+  height: 470px;
+  margin: 0 auto;
+  display: block;
+}
+
+.slogan {
+  text-align: center;
+}
+
+#grayout {
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  height: 100%;
+  width: 100%;
+  background-color: black;
+  opacity: 0.5;
+  z-index: 9999;
+}
+
+.button-fancy {
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0.16, rgb(207, 207, 207)), color-stop(0.79, rgb(252, 252, 252)));
+  background-image: -moz-linear-gradient(center bottom, rgb(207, 207, 207) 16%, rgb(252, 252, 252) 79%);
+  background-image: linear-gradient(to top, rgb(207, 207, 207) 16%, rgb(252, 252, 252) 79%); 
+  padding: 3px;
+  border: 1px solid #000;
+  color: black;
+  text-decoration: none;
+}
+
+.footer {
+  padding-top: 25px;
+  margin: auto;
+}
+
+.lee-name {
+  line-height: 100px;
+  margin-left: 140px;
+  font-size: 20px;
+}
+
+.graeme-name {
+  line-height: 100px;
+  margin-left: 245px;
+  font-size: 20px;
+}
+
+.shreyas-name {
+  line-height: 100px;
+  margin-left: 185px;
+  font-size: 20px;
+}
+
+.caity-name {
+  line-height: 100px;
+  margin-left: 170px;
+  font-size: 20px;
+}
+
+.lee-zeitz {
+  height: 300px;
+  width: 300px;
+  border-radius: 50%;
+}
+
+.graeme-bates {
+  height: 300px;
+  width: 300px;
+  border-radius: 50%;
+  margin-left: 50px;
+}
+
+.shreyas {
+  height: 300px;
+  width: 300px;
+  border-radius: 50%;
+  margin-left: 50px;
+}
+
+.avatar-img {
+  padding-top: 15px;
+  height: 70px;
+  margin: 0 auto;
+  display: block;
+}
+
+.get-started {
+  text-align: center;
+  font-size: 24px;
+}
+
+.banner-text {
+  background-color: black;
+  opacity: .8;
+  width: 75%;
+  margin: auto;
+  border-radius: 10px;
+}
+
+.banner-text h1 {
+  font-size: 66px;
+  font-weight: bold;
+  color: white;
+}
+
+.banner-text hr {
+  border-top: 5px dotted white;
+  width: 50%;
+  margin: auto;
+}
+
+.banner-text p {
+  color: white;
+  font-size: 20px;
+  padding: 1em;
+}
