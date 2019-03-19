@@ -27,8 +27,6 @@ class App extends Component {
     const selectorId = document.querySelector('.mdl-layout');
     selectorId.MaterialLayout.toggleDrawer();
 
-    console.log(state, isHomepage);
-
     if (!this.state.isLoggedIn && !state && !isHomepage) {
         alert('Please login to view this page. Thank you!');
     }
@@ -54,8 +52,8 @@ class App extends Component {
 
   render() {
     return (
-      <div className="demo-big-content">
-        <Layout>
+      <div>
+        <Layout className="demo-big-content">
           <Header
             className="header-color"
             title={

@@ -21,7 +21,7 @@ class Landing extends Component {
                 className="large-img">
               </img>
               <div className="slogan">
-                <strong>
+                <strong className="slogan-name">
                   WE MAKE DAY TRADING EASY!
                 </strong>
               </div>
