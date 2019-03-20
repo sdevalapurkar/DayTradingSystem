@@ -81,7 +81,7 @@ func logUserCommand(transactionNum int, server string, command string, username 
 	r, err := http.Post(auditServer+"/logUserCommand", "application/json; charset=utf-8", b)
 
 	for err != nil {
-		
+
 		r, err = http.Post(auditServer+"/logUserCommand", "application/json; charset=utf-8", b)
 
 		failGracefully(err, "Failed to log user command")
@@ -751,6 +751,47 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+
+	enableCors(w)
+
+	req := struct {
+		UserID string
+	}{""}
+
+	response := struct {
+		Balance float64
+	}{0}
+
+	_ = decoder.Decode(&req)
+
+	queryString := "SELECT balance FROM users WHERE user_id = $1;"
+
+	stmt, _ := db.Prepare(queryString)
+
+	err := stmt.QueryRow(req.UserID).Scan(&response.Balance)
+	defer stmt.Close()
+
+	// If query returns nothing, we need to add the user to the database with a balance of 0
+	if err != nil {
+		queryString = "INSERT INTO users (user_id, balance) VALUES ($1, $2)"
+
+		stmt, _ := db.Prepare(queryString)
+
+		res, _ := stmt.Exec(req.UserID, 0)
+		response.Balance = 0.0
+	}
+	payload, _ := json.Marshal(response)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(payload)
+}
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 func main() {
 	port := ":8080"
 	http.HandleFunc("/add", addHandler)
@@ -769,5 +810,6 @@ func main() {
 	http.HandleFunc("/cancel_set_sell", cancelSetSellHandler)
 	http.HandleFunc("/dumplog", dumpLogHandler)
 	http.HandleFunc("/display_summary", displaySummaryHandler)
+	http.HandleFunc("/login", loginHandler)
 	http.ListenAndServe(port, nil)
 }
