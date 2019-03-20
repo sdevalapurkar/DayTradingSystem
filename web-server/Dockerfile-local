@@ -1,12 +1,10 @@
-FROM node:carbon
+FROM golang:alpine
 
-WORKDIR /
+RUN apk update && apk add --no-cache bash git
 
-COPY ./package.json ./
+COPY . /go/src/web-server
 
-RUN npm install
+RUN go get /go/src/web-server
+RUN go install /go/src/web-server
 
-COPY . .
-
-CMD ["node", "server.js"]
-EXPOSE 8123
+ENTRYPOINT /go/bin/web-server
