@@ -754,7 +754,7 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
-	enableCors(w)
+	enableCors(&w)
 
 	req := struct {
 		UserID string
@@ -780,6 +780,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		stmt, _ := db.Prepare(queryString)
 
 		res, _ := stmt.Exec(req.UserID, 0)
+
+		numrows, err := res.RowsAffected()
+		if numrows < 1 {
+			failOnError(err, "Failed to add balance")
+		}
 		response.Balance = 0.0
 	}
 	payload, _ := json.Marshal(response)
