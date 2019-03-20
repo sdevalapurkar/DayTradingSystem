@@ -411,7 +411,7 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	req := struct {
-		Username string
+		UserID string
 	}{""}
 
 	_ = decoder.Decode(&req)
