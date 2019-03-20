@@ -6,6 +6,7 @@ import logo from './logo.png';
 import Main from './components/main';
 import Modal from './components/modal';
 import Landing from './components/landing';
+import { Redirect } from 'react-router-dom'
 
 class App extends Component {
   constructor(props) {
@@ -14,7 +15,18 @@ class App extends Component {
     this.state = {
         isOpen: false,
         isLoggedIn: false,
+        userState: {},
     };
+
+    this.setUserStateValues = this.setUserStateValues.bind(this);
+  }
+
+  setUserStateValues(userState) {
+    this.setState({
+        userState,
+        isLoggedIn: true,
+    });
+    this.toggleModal();
   }
 
   informLoginStatus() {
@@ -24,6 +36,7 @@ class App extends Component {
   }
 
   hideToggle(state=false, isHomepage=false) {
+    console.log('userstate:', this.state.userState);
     const selectorId = document.querySelector('.mdl-layout');
     selectorId.MaterialLayout.toggleDrawer();
 
@@ -89,6 +102,7 @@ class App extends Component {
           </Drawer>
           <Modal
             show={this.state.isOpen}
+            setUserStateValues={this.setUserStateValues}
             onClose={this.toggleModal}>
             Please enter your User ID to log in:
           </Modal>

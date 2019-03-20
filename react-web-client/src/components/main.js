@@ -6,7 +6,7 @@ import Trading from './trading';
 const Main = () => (
   <Switch>
     <Route path="/contact" component={TeamMembers} />
-    <Route path="" component={Trading} />
+    <Route path="/login" component={Trading} />
   </Switch>
 )
 
