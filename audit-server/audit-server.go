@@ -354,9 +354,9 @@ func dumpUserLogHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func dumpLog(filename string, username string, isUser bool) {
-	userquery := ""
+	userquery := " LIMIT 1000000"
 	if isUser {
-		userquery = " WHERE user_id = '" + username + "'"
+		userquery = " WHERE user_id = '" + username + "' LIMIT 1000000"
 	}
 	logs := []LogType{}
 
@@ -365,8 +365,9 @@ func dumpLog(filename string, username string, isUser bool) {
 	rows, err := db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
 	defer rows.Close()
-
+	
 	for rows.Next() {
+
 		logEvent := UserCommand{}
 
 		if err := rows.Scan(&logEvent.Command, &logEvent.Filename, &logEvent.Funds, &logEvent.Server,
@@ -377,6 +378,7 @@ func dumpLog(filename string, username string, isUser bool) {
 		logs = append(logs, logEvent)
 	}
 
+	fmt.Println(len(logs))
 	// Get systemevents
 	queryString = "SELECT * FROM system_events" + userquery
 
