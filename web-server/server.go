@@ -414,6 +414,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		UserID string
 	}{""}
 
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+
 	_ = decoder.Decode(&req)
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
@@ -422,6 +427,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := ioutil.ReadAll(r1.Body)
 	w.Write([]byte(body))
+}
+
+func setupResponse(w *http.ResponseWriter, req *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+    (*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+    (*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
 
 func main() {
