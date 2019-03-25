@@ -1,8 +1,8 @@
 version: '3'
 services:
-  web:
+  nginx:
     build: 
-      context: web-server/
+      context: nginx/
       dockerfile: Dockerfile-local
     ports:
       - "8123:8123"
