@@ -3,16 +3,26 @@ import PropTypes from 'prop-types';
 import axios from 'axios';
 
 const host = 'http://localhost';
-const port = 8009;
+const port = 8123;
 
 class Modal extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            userID: '',
+        }
+      }
 
   submitUserID(userID) {
-    axios.post(`${host}:${port}/api/ADD`, {
-        userID,
+    console.log(`${host}:${port}/login`);
+    axios.post(`${host}:${port}/login`, {
+        'userID': userID,
     })
     .then(response => {
         console.log('response is: ', response);
+        response.data = { ...response.data, userID: this.state.userID };
+        console.log('response.data ', response.data);
         this.props.setUserStateValues(response.data);
     })
     .catch(err => {
@@ -35,9 +45,9 @@ class Modal extends React.Component {
             <form>
               <label>
                 User ID:
-                <input type="text" name="userid" />
+                <input type="text" onChange={evt => this.setState({ userID: evt.target.value })} name="userid"/>
               </label>
-              <input onClick={(userid) => this.submitUserID(userid)} className="button-fancy" value="Submit" />
+              <input onClick={() => this.submitUserID(this.state.userID)} className="button-fancy" value="Submit" />
             </form>
             <div className="close-modal">
               <button className="button-fancy" onClick={this.props.onClose}>

@@ -754,8 +754,6 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
-	enableCors(&w)
-
 	req := struct {
 		UserID string
 	}{""}
@@ -791,10 +789,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(payload)
-}
-
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func main() {

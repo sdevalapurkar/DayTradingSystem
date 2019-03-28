@@ -43,6 +43,28 @@
   color: #8B0000;
 }
 
+.table-bordered {
+    border: 1px solid #ddd;
+}
+
+.table {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 20px;
+}
+
+table {
+    background-color: transparent;
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+
+td, th {
+    border: 1px solid #999;
+    padding: 0.5rem;
+    text-align: left;
+}
+
 .button-fancy {
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -55,6 +77,20 @@
   color: black;
   text-decoration: none;
   width: 40px;
+}
+
+.button-fancy-new {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0.16, rgb(207, 207, 207)), color-stop(0.79, rgb(252, 252, 252)));
+    background-image: -moz-linear-gradient(center bottom, rgb(207, 207, 207) 16%, rgb(252, 252, 252) 79%);
+    background-image: linear-gradient(to top, rgb(207, 207, 207) 16%, rgb(252, 252, 252) 79%); 
+    padding: 3px;
+    border: 1px solid #000;
+    color: black;
+    text-decoration: none;
+    width: 70px;
 }
 
 .footer {

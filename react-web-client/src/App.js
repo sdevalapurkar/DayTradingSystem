@@ -6,7 +6,6 @@ import logo from './logo.png';
 import Main from './components/main';
 import Modal from './components/modal';
 import Landing from './components/landing';
-import { Redirect } from 'react-router-dom'
 
 class App extends Component {
   constructor(props) {
@@ -27,6 +26,8 @@ class App extends Component {
         isLoggedIn: true,
     });
     this.toggleModal();
+
+    console.log('user state mate: ', this.state.userState);
   }
 
   informLoginStatus() {
@@ -109,7 +110,9 @@ class App extends Component {
           {this.state.isLoggedIn &&
             <Content>
                 <div className="page-content" />
-                <Main/>
+                <Main
+                    userState={this.state.userState}
+                />
             </Content>
           }
           <Landing
