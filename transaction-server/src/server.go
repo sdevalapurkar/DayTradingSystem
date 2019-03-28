@@ -751,46 +751,6 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func getUserDataHandler(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-
-	req := struct {
-		UserID string
-	}{""}
-
-	response := struct {
-		Balance float64
-	}{0}
-
-	_ = decoder.Decode(&req)
-
-	queryString := "SELECT balance FROM users WHERE user_id = $1;"
-
-	stmt, _ := db.Prepare(queryString)
-
-	err := stmt.QueryRow(req.UserID).Scan(&response.Balance)
-	defer stmt.Close()
-
-	// If query returns nothing, we need to add the user to the database with a balance of 0
-	if err != nil {
-		queryString = "INSERT INTO users (user_id, balance) VALUES ($1, $2)"
-
-		stmt, _ := db.Prepare(queryString)
-
-		res, _ := stmt.Exec(req.UserID, 0)
-
-		numrows, err := res.RowsAffected()
-		if numrows < 1 {
-			failOnError(err, "Failed to add balance")
-		}
-		response.Balance = 0.0
-	}
-	payload, _ := json.Marshal(response)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(payload)
-}
-
 func main() {
 	port := ":8080"
 	http.HandleFunc("/add", addHandler)
