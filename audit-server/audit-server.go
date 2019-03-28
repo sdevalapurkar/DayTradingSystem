@@ -578,7 +578,7 @@ func dumpLog(filename string, username string, isUser bool) {
 		logs = append(logs, logEvent)
 	}
 
-	fmt.Println(len(logs))
+
 	// Get systemevents
 	queryString = "SELECT * FROM system_events" + userquery
 

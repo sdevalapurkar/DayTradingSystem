@@ -18,7 +18,7 @@ import (
 var (
 	dbstring = func() string {
 		if runningInDocker() {
-			return "http://localhost:4200"
+			return "http://transaction-db:4200"
 		}
 		return "http://localhost:4200"
 	}()
@@ -27,14 +27,14 @@ var (
 
 	auditServer = func() string {
 		if runningInDocker() {
-			return "http://localhost:8081"
+			return "http://audit:8081"
 		}
 		return "http://localhost:8081"
 	}()
 
 	redishost = func() string {
 		if runningInDocker() {
-			return "localhost:6379"
+			return "redis:6379"
 		}
 		return "http://localhost:6379"
 	}()
@@ -741,7 +741,7 @@ func enableCors(w *http.ResponseWriter) {
 func audit(audits <-chan interface{}) {
 	channelName := ""
 	for audit := range audits {
-		fmt.Println("here bitch")
+		
 		switch audit.(type) {
 		case UserCommand:
 			channelName = "uc"
