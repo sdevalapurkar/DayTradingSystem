@@ -423,7 +423,7 @@ func getUserDataHandler(w http.ResponseWriter, r *http.Request) {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 
-	r1, _ := http.Post(transactionServer+"/login", "application/json; charset=utf-8", b)
+	r1, _ := http.Post(transactionServer+"/get_user_data", "application/json; charset=utf-8", b)
 
 	body, _ := ioutil.ReadAll(r1.Body)
 	w.Write([]byte(body))
