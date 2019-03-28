@@ -6,6 +6,10 @@ import logo from './logo.png';
 import Main from './components/main';
 import Modal from './components/modal';
 import Landing from './components/landing';
+import axios from 'axios';
+
+const host = 'http://localhost';
+const port = 8123;
 
 class App extends Component {
   constructor(props) {
@@ -65,6 +69,28 @@ class App extends Component {
     this.setState({ isOpen: false });
   }
 
+  updateUserStateValues(userState) {
+    this.setState({ userState });
+  }
+
+  getAccountDetails() {
+    console.log('user id?', this.state.userState.userID);
+    console.log(`${host}:${port}/login`);
+    axios.post(`${host}:${port}/get_user_data`, {
+        'userID': 'eee',
+    })
+    .then(response => {
+        console.log('response is: ', response);
+        response.data = { ...response.data, userID: this.state.userID };
+        console.log('response.data ', response.data);
+        // this.props.setUserStateValues(response.data);
+        this.updateUserStateValues(response.data);
+    })
+    .catch(err => {
+        console.log('err is: ', err);
+    });
+  }
+
   render() {
     return (
       <div>
@@ -86,7 +112,7 @@ class App extends Component {
                 <Link onClick={() => this.toggleModal()} to="/login">Login</Link>
               }
               {this.state.isLoggedIn &&
-                <Link onClick={() => console.log('view my account')} to="/myaccount">View my Account</Link>
+                <Link onClick={() => this.getAccountDetails()} to="/myaccount">View my Account</Link>
               }
             </Navigation>
           </Header>

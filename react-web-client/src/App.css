@@ -59,6 +59,21 @@ table {
     border-collapse: collapse;
 }
 
+.form-class-name {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.input-class-name {
+    border-radius: 2px;
+    height: 20px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    padding: 3px;
+    border: 1px solid #000;
+}
+
 td, th {
     border: 1px solid #999;
     padding: 0.5rem;

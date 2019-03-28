@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 
 class Main extends Component {
     componentDidMount() {
-        console.log(this.props);
+        console.log('main props: ', this.props);
     }
 
     render() {
@@ -15,19 +15,11 @@ class Main extends Component {
             <Switch>
                 <Route path="/contact" component={TeamMembers} />
                 <Route path="/login" render={(props) => <Trading {...props} userState={this.props.userState} /> } />
-                <Route path="/myaccount" render={(props) => <MyAccount {...props} data = {tableData} /> } />
+                <Route path="/myaccount" render={(props) => <MyAccount {...props} userState={this.props.userState} /> } />
             </Switch>
         );
     }
 }
-
-var tableData = {
-    columns: ['Stock', 'Amount Owned'],
-    rows: [{
-      'Stock': 'ABC',
-      'Amount Owned': 50,
-    }]
-};
 
 Main.propTypes = {
     userState: PropTypes.any,
