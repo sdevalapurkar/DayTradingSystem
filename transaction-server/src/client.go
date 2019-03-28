@@ -71,7 +71,7 @@ func getOwnedStocks(UserID string) []StockRows {
 	stocks := []StockRows{}
 
 	queryString := "SELECT symbol, quantity FROM stocks WHERE user_id = $1"
-	rows, err := db.Query(queryString)
+	rows, err := db.Query(queryString, UserID)
 
 	defer rows.Close()
 
