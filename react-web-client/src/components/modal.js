@@ -15,6 +15,15 @@ class Modal extends React.Component {
       }
 
   submitUserID(userID) {
+    var regex = /^[A-Za-z0-9]+$/
+    //Validate TextBox value against the Regex.
+    var isValid = regex.test(userID);
+
+    if (!isValid) {
+        alert("Contains Special Characters. Please fix your input.");
+        return;
+    }
+
     console.log(`${host}:${port}/login`);
     axios.post(`${host}:${port}/get_user_data`, {
         'userID': userID,

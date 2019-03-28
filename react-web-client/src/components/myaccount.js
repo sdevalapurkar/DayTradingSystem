@@ -2,10 +2,19 @@ import React, { Component } from 'react';
 
 export default class MyAccount extends Component {
     render() {
-        var dataColumns = this.props.data.columns;
-        var dataRows = this.props.data.rows;
+        console.log('my account props: ', this.props);
+
+        const tableData = {
+            columns: ['Balance'],
+            rows: [{
+              'Balance': this.props.userState.Balance,
+            }]
+        };
+
+        const dataColumns = tableData.columns;
+        const dataRows = tableData.rows;
   
-        var tableHeaders = (
+        const tableHeaders = (
             <thead>
                 <tr>
                     {dataColumns.map(function(column) {
@@ -15,7 +24,7 @@ export default class MyAccount extends Component {
             </thead>
         );
   
-        var tableBody = dataRows.map(function(row) {
+        const tableBody = dataRows.map(function(row) {
             return (
                 <tr>
                     {dataColumns.map(function(column) {

@@ -33,6 +33,10 @@ export default class Trading extends Component {
   }
 
   getQuote() {
+      if (this.state.quoteSymbol.length > 3) {
+        alert('Please enter a valid stock symbol.');  
+        return;
+      }
       const userID = this.props.userState.userID;
       console.log('hey i clicked quote and the symbol is: ', this.state.quoteSymbol);
   }
@@ -44,12 +48,20 @@ export default class Trading extends Component {
   }
 
   buyStock() {
+      if (this.state.stockToBuy.length > 3) {
+        alert('Please enter a valid stock symbol.');  
+        return;
+      }
       if (this.isPositiveNumber(this.state.amountToBuy)) {
         console.log('stock to buy:', this.state.stockToBuy + ' and amount to buy: ', this.state.amountToBuy);
       }
   }
 
   sellStock() {
+      if (this.state.stockToSell.length > 3) {
+        alert('Please enter a valid stock symbol.');  
+        return;
+      }
       if (this.isPositiveNumber(this.state.amountToSell)) {
         console.log('stock to sell: ', this.state.stockToSell + ' and sell amount: ', this.state.amountToSell);
       }
@@ -58,31 +70,31 @@ export default class Trading extends Component {
   render() {
     return (
       <div>
-        <form>
+        <form className="form-class-name">
+            <p>Get Quote:</p>
             <label>
-            Get Quote:
-            <input placeholder="Enter stock symbol" type="text" onChange={evt => this.setState({ quoteSymbol: evt.target.value })}/>
+            <input className="input-class-name" placeholder="Enter stock symbol" type="text" onChange={evt => this.setState({ quoteSymbol: evt.target.value })}/>
             </label>
             <input className="button-fancy-new" value="Get Quote" onClick={() => this.getQuote()} />
         </form>
-        <form>
+        <form className="form-class-name">
+        <p>Add Money to Account:</p>
             <label>
-            Add Money to Account:
             <input placeholder="Enter amount" type="text" onChange={evt => this.setState({ amountToAdd: evt.target.value })} />
             </label>
             <input className="button-fancy-new" value="Add Amount" onClick={() => this.addAmount()} />
         </form>
-        <form>
+        <form className="form-class-name">
+            <p>Buy Stock:</p>
             <label>
-            Buy Stock:
             <input placeholder="Enter stock symbol" type="text" onChange={evt => this.setState({ stockToBuy: evt.target.value })} />
             <input placeholder="Enter amount" type="text" onChange={evt => this.setState({ amountToBuy: evt.target.value })} />
             </label>
             <input className="button-fancy-new" value="Buy Stock" onClick={() => this.buyStock()} />
         </form>
-        <form>
+        <form className="form-class-name">
+            <p>Sell Stock:</p>
             <label>
-            Sell Stock:
             <input placeholder="Enter stock symbol" type="text" onChange={evt => this.setState({ stockToSell: evt.target.value })} />
             <input placeholder="Enter amount" type="text" onChange={evt => this.setState({ amountToSell: evt.target.value })} />
             </label>
