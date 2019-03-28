@@ -61,6 +61,7 @@ class App extends Component {
   }
 
   goHome() {
+    console.log('hey');
     this.setState({ isOpen: false });
   }
 
@@ -71,7 +72,7 @@ class App extends Component {
           <Header
             className="header-color"
             title={
-                <Link onClick={() => this.goHome()} style={{textDecoration: 'none', color: 'white'}} to="/">
+                <Link style={{textDecoration: 'none', color: 'white'}} to="/login" userState={this.state.userState}>
                     <img
                         src={logo}
                         alt="avatar"

@@ -16,7 +16,7 @@ class Modal extends React.Component {
 
   submitUserID(userID) {
     console.log(`${host}:${port}/login`);
-    axios.post(`${host}:${port}/login`, {
+    axios.post(`${host}:${port}/get_user_data`, {
         'userID': userID,
     })
     .then(response => {
