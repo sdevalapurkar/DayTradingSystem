@@ -751,7 +751,7 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
+func getUserDataHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	req := struct {
@@ -809,6 +809,6 @@ func main() {
 	http.HandleFunc("/cancel_set_sell", cancelSetSellHandler)
 	http.HandleFunc("/dumplog", dumpLogHandler)
 	http.HandleFunc("/display_summary", displaySummaryHandler)
-	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/get_user_data", getUserDataHandler)
 	http.ListenAndServe(port, nil)
 }

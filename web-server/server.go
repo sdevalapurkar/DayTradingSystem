@@ -408,7 +408,7 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(body))
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
+func getUserDataHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	req := struct {
 		UserID string
@@ -431,8 +431,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 func setupResponse(w *http.ResponseWriter, req *http.Request) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-    (*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-    (*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
 
 func main() {
@@ -453,6 +453,6 @@ func main() {
 	http.HandleFunc("/cancel_set_sell", cancelSetSellHandler)
 	http.HandleFunc("/dumplog", dumpLogHandler)
 	http.HandleFunc("/display_summary", displaySummaryHandler)
-	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/get_user_data", getUserDataHandler)
 	http.ListenAndServe(port, nil)
 }
