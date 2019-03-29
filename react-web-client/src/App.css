@@ -11,15 +11,14 @@
   margin-left: 35px;
 }
 
-.modal {
-  text-align: center;
-  background-color: #FFE4B5;
-  border-radius: 5px;
-  max-width: 300px;
-  min-height: 30px;
-  margin: 0 auto;
-  padding: 25px;
-  margin-top: 100px;
+.align-center {
+    font-size: 15px;
+    text-align: center;
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+}
+
+.font-styling {
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 }
 
 .close-modal {
@@ -28,19 +27,28 @@
 
 .large-img {
   padding-top: 15px;
-  height: 470px;
+  height: 400px;
   margin: 0 auto;
   display: block;
 }
 
+.move-down {
+    padding-top: 30px;
+}
+
+.move-down-more {
+    padding-top: 200px;
+}
+
 .slogan {
+  margin-top: 45px;
   text-align: center;
 }
 
 .slogan-name {
-  font-size: 20px;
-  font-family: Optima, sans-serif;
-  color: #8B0000;
+  font-size: 30px;
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  color: #DC143C;
 }
 
 .table-bordered {
@@ -53,6 +61,10 @@
     margin-bottom: 20px;
 }
 
+body {
+    background-image: url('./background_image_2.jpg');
+}
+
 table {
     background-color: transparent;
     border-spacing: 0;
@@ -60,12 +72,13 @@ table {
 }
 
 .form-class-name {
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
     text-align: center;
     margin-top: 30px;
 }
 
 .input-class-name {
-    border-radius: 2px;
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
     height: 20px;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
@@ -81,6 +94,7 @@ td, th {
 }
 
 .button-fancy {
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
@@ -95,6 +109,7 @@ td, th {
 }
 
 .button-fancy-new {
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     border-radius: 5px;
@@ -106,6 +121,13 @@ td, th {
     color: black;
     text-decoration: none;
     width: 70px;
+    height: 20px;
+}
+
+.title-h2 {
+    text-align: center;
+    font-size: 24px;
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 }
 
 .footer {
@@ -117,24 +139,28 @@ td, th {
   line-height: 100px;
   margin-left: 140px;
   font-size: 20px;
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 }
 
 .graeme-name {
   line-height: 100px;
   margin-left: 245px;
   font-size: 20px;
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 }
 
 .shreyas-name {
   line-height: 100px;
   margin-left: 185px;
   font-size: 20px;
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 }
 
 .caity-name {
   line-height: 100px;
   margin-left: 170px;
   font-size: 20px;
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 }
 
 .lee-zeitz {

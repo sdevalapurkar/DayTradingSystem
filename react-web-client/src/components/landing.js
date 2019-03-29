@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import '../App.css';
 import { Layout, Content } from 'react-mdl';
-import logo from '../logo.png';
+import logo from '../logo_circle.gif';
 import PropTypes from 'prop-types';
 
 class Landing extends Component {
@@ -14,7 +14,7 @@ class Landing extends Component {
       <div className="demo-big-content">
         <Layout>
           <Content>
-            <div>
+            <div className="move-down">
               <img
                 src={logo}
                 alt="avatar"
@@ -22,7 +22,7 @@ class Landing extends Component {
               </img>
               <div className="slogan">
                 <strong className="slogan-name">
-                  WE MAKE DAY TRADING EASY!
+                  We make Day Trading Easy!
                 </strong>
               </div>
             </div>

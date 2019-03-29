@@ -19,8 +19,11 @@ class Modal extends React.Component {
     //Validate TextBox value against the Regex.
     var isValid = regex.test(userID);
 
-    if (!isValid) {
-        alert("Contains Special Characters. Please fix your input.");
+    if (!userID) {
+        alert("Please enter a user ID.");
+        return;
+    } else if (!isValid) {
+        alert("Your input contains special characters. Please fix your input.");
         return;
     }
 
@@ -46,26 +49,22 @@ class Modal extends React.Component {
     }
 
     return (
-      <div className="backdrop">
-        <div className="modal">
+      
+        <div className="move-down-more align-center">
           {this.props.children}
-
-          <div className="footer">
-            <form>
+            <form className="form-class-name">
               <label>
-                User ID:
-                <input type="text" onChange={evt => this.setState({ userID: evt.target.value })} name="userid"/>
+                <input placeholder="User ID" className="input-class-name" type="text" onChange={evt => this.setState({ userID: evt.target.value })} name="userid"/>
               </label>
-              <input onClick={() => this.submitUserID(this.state.userID)} className="button-fancy" value="Submit" />
+              <input className="button-fancy-new" onClick={() => this.submitUserID(this.state.userID)} className="button-fancy" value="Submit" />
             </form>
             <div className="close-modal">
-              <button className="button-fancy" onClick={this.props.onClose}>
+              <button className="button-fancy-new" onClick={this.props.onClose}>
                 Close
               </button>
             </div>
-          </div>
         </div>
-      </div>
+     
     );
   }
 }

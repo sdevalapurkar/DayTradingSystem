@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 import { Layout, Header, Navigation, Drawer, Content } from 'react-mdl';
 import { Link } from 'react-router-dom';
-import logo from './logo.png';
+import logo from './logo_circle.gif';
 import Main from './components/main';
 import Modal from './components/modal';
 import Landing from './components/landing';
@@ -107,25 +107,25 @@ class App extends Component {
                 </Link>
             } scroll>
             <Navigation>
-              <Link onClick={() => this.informLoginStatus()} to="/contact">Meet the Team</Link>
+              <Link className="font-styling" onClick={() => this.informLoginStatus()} to="/contact">Meet the Team</Link>
               {!this.state.isLoggedIn &&
-                <Link onClick={() => this.toggleModal()} to="/login">Login</Link>
+                <Link className="font-styling" onClick={() => this.toggleModal()} to="/login">Login</Link>
               }
               {this.state.isLoggedIn &&
-                <Link onClick={() => this.getAccountDetails()} to="/myaccount">View my Account</Link>
+                <Link className="font-styling" onClick={() => this.getAccountDetails()} to="/myaccount">View my Account</Link>
               }
             </Navigation>
           </Header>
-          <Drawer title={<Link style={{textDecoration: 'none', color: 'black'}} to="/">Day Trading System</Link>}>
+          <Drawer title={<Link className="font-styling" style={{textDecoration: 'none', color: 'black'}} to="/">Day Trading System</Link>}>
             <Navigation>
-              <Link onClick={() => this.hideToggle(false, true)} to="/">Home</Link>
+              <Link className="font-styling" onClick={() => this.hideToggle(false, true)} to="/">Home</Link>
               {!this.state.isLoggedIn &&
-                <Link onClick={() => this.hideToggle(true)} to="/login">Login</Link>
+                <Link className="font-styling" onClick={() => this.hideToggle(true)} to="/login">Login</Link>
               }
               {this.state.isLoggedIn &&
-                <Link onClick={() => this.hideToggle()} to="/myaccount">View my Account</Link>
+                <Link className="font-styling" onClick={() => this.hideToggle()} to="/myaccount">View my Account</Link>
               }
-              <Link onClick={() => this.hideToggle()} to="/contact">Meet the Team</Link>
+              <Link className="font-styling" onClick={() => this.hideToggle()} to="/contact">Meet the Team</Link>
             </Navigation>
           </Drawer>
           <Modal

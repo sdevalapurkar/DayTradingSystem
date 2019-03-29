@@ -14,6 +14,8 @@ func getUserDataHandler(w http.ResponseWriter, r *http.Request) {
 		UserID string
 	}{""}
 
+	_ = decoder.Decode(&req)
+
 	response := struct {
 		Balance      float64
 		StockAmounts []StockRows
@@ -21,8 +23,6 @@ func getUserDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	response.Balance = getBalance(req.UserID)
 	response.StockAmounts = getOwnedStocks(req.UserID)
-
-	_ = decoder.Decode(&req)
 
 	payload, _ := json.Marshal(response)
 
@@ -67,10 +67,9 @@ type StockRows struct {
 // Return the quantities of each stock owned by a given user
 //
 func getOwnedStocks(UserID string) []StockRows {
-
 	stocks := []StockRows{}
 
-	queryString := "SELECT symbol, quantity FROM stocks WHERE user_id = $1"
+	queryString := "SELECT symbol, quantity FROM stocks WHERE user_id = $1;"
 	rows, err := db.Query(queryString, UserID)
 
 	defer rows.Close()
