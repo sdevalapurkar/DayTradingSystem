@@ -8,6 +8,7 @@ type SystemEvent struct {
 	Stock          string
 	Filename       string
 	Funds          float64
+	Timestamp	   int64
 }
 
 type UserCommand struct {
@@ -18,6 +19,7 @@ type UserCommand struct {
 	Stock          string
 	Filename       string
 	Funds          float64
+	Timestamp      int64
 }
 
 type AccountTransaction struct {
@@ -26,6 +28,7 @@ type AccountTransaction struct {
 	Action         string
 	Username       string
 	Funds          float64
+	Timestamp      int64
 }
 
 type QuoteServerEvent struct {
@@ -36,4 +39,5 @@ type QuoteServerEvent struct {
 	CryptoKey       string
 	QuoteServerTime int64
 	Price           float64
+	Timestamp       int64
 }

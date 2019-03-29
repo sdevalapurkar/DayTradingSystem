@@ -212,19 +212,18 @@ func logUserCommandHandler() {
 				Stock          string
 				Filename       string
 				Funds          float64
-			}{0, "", "", "", "", "", 0.0}
+				Timestamp      int64
+			}{0, "", "", "", "", "", 0.0,0}
 			err := json.Unmarshal(d.Body, &req)
 			failOnError(err, "Failed to parse the request")
 
 			queryString := "INSERT INTO user_commands (command, filename, funds, server, stock, timestamp, transaction_num, user_id)" +
 				" VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
 
-			timestamp := createTimestamp()
-
 			stmt, err := db.Prepare(queryString)
 			failOnError(err, "Failed to prepare user command log query")
 
-			res, err := stmt.Exec(req.Command, req.Filename, req.Funds, req.Server, req.Stock, timestamp, req.TransactionNum, req.Username)
+			res, err := stmt.Exec(req.Command, req.Filename, req.Funds, req.Server, req.Stock, req.Timestamp, req.TransactionNum, req.Username)
 			failOnError(err, "Failed to add user command log")
 
 			numrows, err := res.RowsAffected()
@@ -286,19 +285,18 @@ func logSystemEventHandler() {
 				Stock          string
 				Filename       string
 				Funds          float64
-			}{0, "", "", "", "", "", 0.0}
+				Timestamp	   int64
+			}{0, "", "", "", "", "", 0.0,0}
 			err := json.Unmarshal(d.Body, &req)
 			failOnError(err, "Failed to parse the request")
 
 			queryString := "INSERT INTO system_events (command, filename, funds, server, stock, timestamp, transaction_num, user_id)" +
 				" VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
 
-			timestamp := createTimestamp()
-
 			stmt, err := db.Prepare(queryString)
 			failOnError(err, "Failed to prepare system event log query")
 
-			res, err := stmt.Exec(req.Command, req.Filename, req.Funds, req.Server, req.Stock, timestamp, req.TransactionNum, req.Username)
+			res, err := stmt.Exec(req.Command, req.Filename, req.Funds, req.Server, req.Stock, req.Timestamp, req.TransactionNum, req.Username)
 			failOnError(err, "Failed to add system event log")
 
 			numrows, err := res.RowsAffected()
@@ -359,19 +357,18 @@ func logQuoteServerHandler() {
 				CryptoKey       string
 				QuoteServerTime int
 				Price           float64
-			}{0, "", "", "", "", 0, 0.0}
+				Timestamp       int64
+			}{0, "", "", "", "", 0, 0.0,0}
 			err := json.Unmarshal(d.Body, &req)
 			failOnError(err, "Failed to parse the request")
 
 			queryString := "INSERT INTO quote_server_events (crypto_key, price, quote_server_time, server, stock, timestamp, transaction_num, user_id)" +
 				" VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
 
-			timestamp := createTimestamp()
-
 			stmt, err := db.Prepare(queryString)
 			failOnError(err, "Failed to prepare quote server event log query")
 
-			res, err := stmt.Exec(req.CryptoKey, req.Price, req.QuoteServerTime, req.Server, req.Stock, timestamp, req.TransactionNum, req.Username)
+			res, err := stmt.Exec(req.CryptoKey, req.Price, req.QuoteServerTime, req.Server, req.Stock, req.Timestamp, req.TransactionNum, req.Username)
 			failOnError(err, "Failed to add quote server event log")
 
 			numrows, err := res.RowsAffected()
@@ -429,19 +426,18 @@ func logAccountTransactionHandler() {
 				Action         string
 				Username       string
 				Funds          float64
-			}{0, "", "", "", 0.0}
+				Timestamp	   int64
+			}{0, "", "", "", 0.0,0}
 			err := json.Unmarshal(d.Body, &req)
 			failOnError(err, "Failed to parse the request")
 
 			queryString := "INSERT INTO account_transactions (action, funds, server, timestamp, transaction_num, user_id)" +
 				" VALUES ($1, $2, $3, $4, $5, $6)"
 
-			timestamp := createTimestamp()
-
 			stmt, err := db.Prepare(queryString)
 			failOnError(err, "Failed to prepare account transaction log query")
 
-			res, err := stmt.Exec(req.Action, req.Funds, req.Server, timestamp, req.TransactionNum, req.Username)
+			res, err := stmt.Exec(req.Action, req.Funds, req.Server, req.Timestamp, req.TransactionNum, req.Username)
 			failOnError(err, "Failed to add account transaction log")
 
 			numrows, err := res.RowsAffected()
@@ -554,9 +550,9 @@ func dumpUserLogHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func dumpLog(filename string, username string, isUser bool) {
-	userquery := " LIMIT 1000000"
+	userquery := " LIMIT 1200000"
 	if isUser {
-		userquery = " WHERE user_id = '" + username + "' LIMIT 1000000"
+		userquery = " WHERE user_id = '" + username + "' LIMIT 1200000"
 	}
 	logs := []LogType{}
 
@@ -653,9 +649,6 @@ func dumpLog(filename string, username string, isUser bool) {
 
 	// Sort by timestamp then by transactionNum
 	sort.Slice(logs, func(i, j int) bool {
-		if logs[i].GetTimestamp() != logs[j].GetTimestamp() {
-			return logs[i].GetTimestamp() < logs[j].GetTimestamp()
-		}
 		return logs[i].GetTransactionNum() < logs[j].GetTransactionNum()
 	})
 
