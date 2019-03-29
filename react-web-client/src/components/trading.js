@@ -203,19 +203,18 @@ export default class Trading extends Component {
                     aria-labelledby="alert-dialog-title"
                     aria-describedby="alert-dialog-description"
                 >
-                    <DialogTitle id="alert-dialog-title">{"Use Google's location service?"}</DialogTitle>
+                    <DialogTitle id="alert-dialog-title">{"Commit your Transaction"}</DialogTitle>
                     <DialogContent>
                         <DialogContentText id="alert-dialog-description">
-                            Let Google help apps determine location. This means sending anonymous location data to
-                            Google, even when no apps are running.
+                            Are you sure you would like to buy this amount of stock at this time?
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={this.handleClose} color="primary">
-                            Disagree
+                            Cancel Buy
                         </Button>
                         <Button onClick={this.handleClose} color="primary" autoFocus>
-                            Agree
+                            Commit Buy
                         </Button>
                     </DialogActions>
                 </Dialog>
