@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"hash/fnv"
 )
 
 func runningInDocker() bool {
@@ -28,6 +29,28 @@ var transactionServer = func() string {
 // Parameters:
 //     err:    the error to check
 //     msg:    a message to print to the console if an error is found
+
+func hashServer(user string) string {
+	server1 := "http://192.168.1.250:8080"
+	server2 := "http://192.168.1.241:8080"
+	server3 := "http://192.168.1.242:8080"
+	//server4 := "192.168.1.233"
+	h := fnv.New32a()
+        h.Write([]byte(user))
+	hash := h.Sum32()
+	hash = hash%3
+	switch hash {
+	case 0:
+		return server1
+	case 1:
+		return server2
+	case 2:
+		return server3
+	//case 3: 
+	//	return server4
+	}
+	return server1
+}
 
 func failOnError(err error, msg string) {
 	if err != nil {
@@ -55,7 +78,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 
-	r1, err1 := http.Post(transactionServer+"/add", "application/json; charset=utf-8", b)
+	r1, err1 := http.Post(hashServer(req.UserID)+"/add", "application/json; charset=utf-8", b)
 	failOnError(err1, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -78,7 +101,7 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/quote", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/quote", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -102,7 +125,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/buy", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/buy", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -124,7 +147,7 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/commit_buy", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/commit_buy", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -146,7 +169,7 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/cancel_buy", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/cancel_buy", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -170,7 +193,7 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/sell", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/sell", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -192,7 +215,7 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/commit_sell", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/commit_sell", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -214,7 +237,7 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/cancel_sell", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/cancel_sell", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -238,7 +261,7 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/set_buy_amount", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/set_buy_amount", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -261,7 +284,7 @@ func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/cancel_set_buy", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/cancel_set_buy", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -285,7 +308,7 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/set_buy_trigger", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/set_buy_trigger", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -309,7 +332,7 @@ func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/set_sell_amount", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/set_sell_amount", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -333,7 +356,7 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/set_sell_trigger", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/set_sell_trigger", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -356,7 +379,7 @@ func cancelSetSellHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/cancel_set_sell", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/cancel_set_sell", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -379,7 +402,7 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/dumplog", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/dumplog", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -401,7 +424,7 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-	r1, err := http.Post(transactionServer+"/display_summary", "application/json; charset=utf-8", b)
+	r1, err := http.Post(hashServer(req.UserID)+"/display_summary", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
@@ -418,7 +441,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 
-	r1, _ := http.Post(transactionServer+"/login", "application/json; charset=utf-8", b)
+	r1, _ := http.Post(hashServer(req.UserID)+"/login", "application/json; charset=utf-8", b)
 
 	body, _ := ioutil.ReadAll(r1.Body)
 	w.Write([]byte(body))
