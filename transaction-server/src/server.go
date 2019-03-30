@@ -141,12 +141,20 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		TransactionNum int
 	}{"", 0.0, 0}
 
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+
 	// Read request json into struct
 	err := decoder.Decode(&req)
 	if err != nil {
 
 		failGracefully(err, "Failed to get add request")
 	}
+
+	fmt.Println(req.UserID)
+	fmt.Println(req.Amount)
 
 	logUserCommand(req.TransactionNum, "transaction-server", "ADD", req.UserID, "", "", req.Amount)
 
@@ -205,7 +213,7 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	quote := getQuote(req.Symbol, req.TransactionNum, req.UserID)
 
 	// Return UserID, Symbol, and stock quote in comma-delimited string
-	w.Write([]byte(req.UserID + "," + req.Symbol + "," + strconv.FormatFloat(quote, 'f', -1, 64)))
+	w.Write([]byte(strconv.FormatFloat(quote, 'f', -1, 64)))
 }
 
 // Tested
@@ -219,6 +227,11 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		TransactionNum int
 	}{"", 0.0, "", 0}
 
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+
 	// Read request json data into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
@@ -226,7 +239,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	logUserCommand(req.TransactionNum, "transaction-server", "BUY", req.UserID, req.Symbol, "", req.Amount)
 
 	if req.Amount < 0 {
-		panic("Can't purchase a negative amount")
+		failGracefully(err, "Cannot purchase a negative amount")
 	}
 
 	// Get price of requested stock
@@ -249,6 +262,9 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to get user balance")
 	defer stmt.Close()
 
+	fmt.Println(balance)
+	fmt.Println(cost)
+
 	// Check user balance against cost of requested stock purchase
 	if balance >= cost {
 		// User has enough, reserve the funds by pulling them from the account
@@ -266,8 +282,10 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// Add buy transaction to front of user's transaction list
 		cache.LPush(req.UserID+":buy", req.Symbol+":"+strconv.Itoa(buyNumber))
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 // Tested
@@ -278,6 +296,11 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 		UserID         string
 		TransactionNum int
 	}{"", 0}
+
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
 
 	// Parse request parameters into struct (just user_id)
 	err := decoder.Decode(&req)
@@ -328,6 +351,11 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 		TransactionNum int
 	}{"", 0}
 
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
@@ -347,6 +375,11 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 		Symbol         string
 		TransactionNum int
 	}{"", 0.0, "", 0}
+
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
@@ -405,6 +438,11 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 		TransactionNum int
 	}{"", 0}
 
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
@@ -462,6 +500,11 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 		UserID         string
 		TransactionNum int
 	}{"", 0}
+
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
 
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")

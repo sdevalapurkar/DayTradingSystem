@@ -39,17 +39,23 @@ func failOnError(err error, msg string) {
 func addHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
-	w.WriteHeader(http.StatusOK)
-
 	req := struct {
 		UserID         string
 		Amount         float64
 		TransactionNum int
 	}{"", 0.0, 0}
 
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
+
+	fmt.Println(req.UserID)
+	fmt.Println(req.Amount)
 
 	// Encode request parameters into a struct
 	b := new(bytes.Buffer)
@@ -58,8 +64,8 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	r1, err1 := http.Post(transactionServer+"/add", "application/json; charset=utf-8", b)
 	failOnError(err1, "Failed to post the request")
 
-	body, err := ioutil.ReadAll(r1.Body)
-	w.Write([]byte(body))
+	_, err = ioutil.ReadAll(r1.Body)
+	w.WriteHeader(http.StatusOK)
 }
 
 func quoteHandler(w http.ResponseWriter, r *http.Request) {
@@ -98,13 +104,18 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 
 func buyHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	w.WriteHeader(http.StatusOK)
+
 	req := struct {
 		UserID         string
 		Amount         float64 // dolar amount of a stock to buy
 		Symbol         string
 		TransactionNum int
 	}{"", 0.0, "", 0}
+
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
 
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
@@ -116,17 +127,26 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	r1, err := http.Post(transactionServer+"/buy", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
-	body, err := ioutil.ReadAll(r1.Body)
-	w.Write([]byte(body))
+	_, err = ioutil.ReadAll(r1.Body)
+	if (r1.StatusCode == 400) {
+		w.WriteHeader(http.StatusBadRequest)
+	} else if (r1.StatusCode == 200) {
+		w.WriteHeader(http.StatusOK)
+	}
+	
 }
 
 func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	w.WriteHeader(http.StatusOK)
 	req := struct {
 		UserID         string
 		TransactionNum int
 	}{"", 0}
+
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
 
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
@@ -144,11 +164,16 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	w.WriteHeader(http.StatusOK)
+
 	req := struct {
 		UserID         string
 		TransactionNum int
 	}{"", 0}
+
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
 
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
@@ -166,13 +191,18 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 func sellHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	w.WriteHeader(http.StatusOK)
+
 	req := struct {
 		UserID         string
 		Amount         float64 // Dollar value to sell
 		Symbol         string
 		TransactionNum int
 	}{"", 0.0, "", 0}
+
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
 
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
@@ -190,11 +220,16 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 
 func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	w.WriteHeader(http.StatusOK)
+
 	req := struct {
 		UserID         string
 		TransactionNum int
 	}{"", 0}
+
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
 
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
@@ -212,11 +247,16 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 
 func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	w.WriteHeader(http.StatusOK)
+
 	req := struct {
 		UserID         string
 		TransactionNum int
 	}{"", 0}
+
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
 
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)

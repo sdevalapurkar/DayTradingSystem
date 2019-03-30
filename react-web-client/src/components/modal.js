@@ -33,6 +33,7 @@ class Modal extends React.Component {
     })
     .then(response => {
         console.log('response is: ', response);
+        console.log('response.data before: ', response.data);
         response.data = { ...response.data, userID: this.state.userID };
         console.log('response.data ', response.data);
         this.props.setUserStateValues(response.data);

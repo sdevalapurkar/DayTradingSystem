@@ -44,9 +44,41 @@ export default class Trading extends Component {
         this.setState({ sellOpen: false });
     }
     
-    handleClose = () => {
+    handleCommitBuy = () => {
+        const userID = this.props.userState.userID;
+        axios.post(`${host}:${port}/commit_buy`, {
+            'userID': userID,
+            'transactionNum': 1,
+        })
+        .then(response => {
+                if (response.status == 200) {
+                    alert('You have succcessfully committed your buy transaction!');
+                }
+        })
+        .catch(err => {
+                console.log('err is: ', err);
+        });
+
         this.setState({ buyOpen: false });
     };
+
+    handleCancelBuy = () => {
+        const userID = this.props.userState.userID;
+        axios.post(`${host}:${port}/cancel_buy`, {
+            'userID': userID,
+            'transactionNum': 1,
+        })
+        .then(response => {
+                if (response.status == 200) {
+                    alert('You have succcessfully cancelled your buy transaction!');
+                }
+        })
+        .catch(err => {
+                console.log('err is: ', err);
+        });
+
+        this.setState({ buyOpen: false });
+    }
 
     isPositiveNumber(value) {
         if (isNaN(value)) {
@@ -84,7 +116,9 @@ export default class Trading extends Component {
       })
       .then(response => {
             console.log('response is: ', response);
-            response.data = { ...response.data, userID: this.state.userID };
+            console.log('response.data before object destructing: ', response.data);
+            const obj = { quote: response.data };
+            response.data = { ...obj, userID };
             console.log('response.data ', response.data);
       })
       .catch(err => {
@@ -97,16 +131,20 @@ export default class Trading extends Component {
             return;
         }
 
+        console.log(this.state.amountToAdd);
+        console.log(typeof(this.state.amountToAdd));
+
         const userID = this.props.userState.userID;
         axios.post(`${host}:${port}/add`, {
             'userID': userID,
-            'amount': this.state.amountToAdd,
+            'amount': parseFloat(this.state.amountToAdd),
             'transactionNum': 1,
         })
         .then(response => {
-                console.log('response is: ', response);
-                response.data = { ...response.data, userID: this.state.userID };
-                console.log('response.data ', response.data);
+            console.log(response);
+            if (response.status == 200) {
+                alert('Successfully added the amount to your account!');
+            }
         })
         .catch(err => {
                 console.log('err is: ', err);
@@ -129,18 +167,20 @@ export default class Trading extends Component {
         const userID = this.props.userState.userID;
         axios.post(`${host}:${port}/buy`, {
             'userID': userID,
-            'amount': this.state.amountToBuy,
+            'amount': parseFloat(this.state.amountToBuy),
             'symbol': this.state.stockToBuy,
             'transactionNum': 1,
         })
         .then(response => {
-                console.log('response is: ', response);
-                response.data = { ...response.data, userID: this.state.userID };
-                console.log('response.data ', response.data);
-                this.handleClickOpen();
+            console.log(response);
+                if (response.status == 200) {
+                    this.handleClickOpen();
+                } else {
+                    alert('Please ensure you have sufficient funds in your account.');
+                }
         })
         .catch(err => {
-                console.log('err is: ', err);
+                alert('Please ensure you have sufficient funds in your account.');
         });
     }
 
@@ -214,7 +254,7 @@ export default class Trading extends Component {
                     open={this.state.buyOpen}
                     disableBackdropClick={true}
                     disableEscapeKeyDown={true}
-                    onClose={this.handleClose}
+                    onClose={this.handleCancelBuy}
                     aria-labelledby="alert-dialog-title"
                     aria-describedby="alert-dialog-description"
                 >
@@ -225,10 +265,10 @@ export default class Trading extends Component {
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={this.handleClose} color="primary">
+                        <Button onClick={this.handleCancelBuy} color="primary">
                             Cancel Buy
                         </Button>
-                        <Button onClick={this.handleClose} color="primary" autoFocus>
+                        <Button onClick={this.handleCommitBuy} color="primary" autoFocus>
                             Commit Buy
                         </Button>
                     </DialogActions>
