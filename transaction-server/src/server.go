@@ -192,9 +192,14 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 		TransactionNum int
 	}{"", "", 0}
 
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
-	logUserCommand(req.TransactionNum, "transaction-server", "QUOTE", req.UserID, req.Symbol, "", 0.0)
+	// logUserCommand(req.TransactionNum, "transaction-server", "QUOTE", req.UserID, req.Symbol, "", 0.0)
 
 	// Get quote for the requested stock symbol
 	quote := getQuote(req.Symbol, req.TransactionNum, req.UserID)
@@ -749,6 +754,12 @@ func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
 	failOnError(err, "Failed to parse request")
 	logUserCommand(req.TransactionNum, "transaction-server", "DISPLAY_SUMMARY", req.UserID, "", "", 0.0)
 	w.WriteHeader(http.StatusOK)
+}
+
+func setupResponse(w *http.ResponseWriter, req *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
 
 func main() {

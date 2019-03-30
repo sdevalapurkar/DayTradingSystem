@@ -27,16 +27,25 @@ export default class Trading extends Component {
             amountToBuy: 0,
             stockToSell: '',
             amountToSell: 0,
-            open: false,
+            buyOpen: false,
+            sellOpen: false,
         }
     }
 
     handleClickOpen = () => {
-        this.setState({ open: true });
+        this.setState({ buyOpen: true });
     };
+
+    handleClickOpenSell = () => {
+        this.setState({ sellOpen: true });
+    }
+
+    handleCloseSell = () => {
+        this.setState({ sellOpen: false });
+    }
     
     handleClose = () => {
-        this.setState({ open: false });
+        this.setState({ buyOpen: false });
     };
 
     isPositiveNumber(value) {
@@ -63,8 +72,12 @@ export default class Trading extends Component {
             return;
         }
 
+        console.log(this.props.userState.userID);
+        console.log('user id is: ', this.props.userState.userID + 'and type is: ', typeof(this.props.userState.userID));
+        console.log('symbol is', this.state.quoteSymbol + 'and its type is: ', typeof(this.state.quoteSymbol));
+
       const userID = this.props.userState.userID;
-      axios.get(`${host}:${port}/quote`, {
+      axios.post(`${host}:${port}/quote`, {
             'userID': userID,
             'symbol': this.state.quoteSymbol,
             'transactionNum': 1,
@@ -113,8 +126,6 @@ export default class Trading extends Component {
             return;
         }
 
-        this.handleClickOpen();
-
         const userID = this.props.userState.userID;
         axios.post(`${host}:${port}/buy`, {
             'userID': userID,
@@ -126,6 +137,7 @@ export default class Trading extends Component {
                 console.log('response is: ', response);
                 response.data = { ...response.data, userID: this.state.userID };
                 console.log('response.data ', response.data);
+                this.handleClickOpen();
         })
         .catch(err => {
                 console.log('err is: ', err);
@@ -155,6 +167,7 @@ export default class Trading extends Component {
                 console.log('response is: ', response);
                 response.data = { ...response.data, userID: this.state.userID };
                 console.log('response.data ', response.data);
+                this.handleClickOpenSell();
         })
         .catch(err => {
                 console.log('err is: ', err);
@@ -198,7 +211,9 @@ export default class Trading extends Component {
                     <input className="button-fancy-new" value="Sell Stock" onClick={() => this.sellStock()} />
                 </form>
                 <Dialog
-                    open={this.state.open}
+                    open={this.state.buyOpen}
+                    disableBackdropClick={true}
+                    disableEscapeKeyDown={true}
                     onClose={this.handleClose}
                     aria-labelledby="alert-dialog-title"
                     aria-describedby="alert-dialog-description"
@@ -215,6 +230,30 @@ export default class Trading extends Component {
                         </Button>
                         <Button onClick={this.handleClose} color="primary" autoFocus>
                             Commit Buy
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog
+                    disableBackdropClick={true}
+                    disableEscapeKeyDown={true}
+                    open={this.state.sellOpen}
+                    onClose={this.handleCloseSell}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title">{"Commit your Transaction"}</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            Are you sure you would like to sell this amount of stock at this time?
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={this.handleCloseSell} color="primary">
+                            Cancel Sell
+                        </Button>
+                        <Button onClick={this.handleCloseSell} color="primary" autoFocus>
+                            Commit Sell
                         </Button>
                     </DialogActions>
                 </Dialog>

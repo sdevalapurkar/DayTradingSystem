@@ -83,7 +83,11 @@ func getQuote(symbol string, transactionNum int, userID string) float64 {
 		if os.Getenv("DEBUG") == "TRUE" {
 
 			//Get quote from the quote server and store it with ttl 60s
-			r, err := http.Get("http://localhost:3000/quote")
+			r, err := http.Get("http://quote:3001/quote")
+
+			fmt.Println(r)
+			fmt.Println(err)
+
 			failOnError(err, "Failed to retrieve quote from quote server")
 			defer r.Body.Close()
 

@@ -64,16 +64,27 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 
 func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	w.WriteHeader(http.StatusOK)
+	
 	req := struct {
 		UserID         string
 		Symbol         string
 		TransactionNum int
 	}{"", "", 0}
 
+
+	fmt.Println("im getting hit!!")
+
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
+
+	fmt.Println(req.UserID)
+	fmt.Println(req.Symbol)
 
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
