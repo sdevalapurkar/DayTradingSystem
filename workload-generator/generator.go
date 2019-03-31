@@ -8,15 +8,19 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"fmt"
+	"time"
 )
 
 var (
-	client = &http.Client{}
+	client = &http.Client{
+		Timeout: time.Duration(time.Nanosecond),
+	}
 )
 
 type Add struct {
 	UserID         string
-	Amount         int
+	Amount         float64
 	TransactionNum int
 }
 
@@ -29,7 +33,7 @@ type Quote struct {
 type Default struct {
 	UserID         string
 	Symbol         string
-	Amount         int
+	Amount         float64
 	TransactionNum int
 }
 
@@ -55,13 +59,14 @@ func sendRequest(line string) {
 	arguments := strings.Split(line, ",")
 	command_type_and_tn := strings.Split(arguments[0], " ")
 	command_type := command_type_and_tn[1]
-	transactionNum := command_type_and_tn[0][1 : len(command_type_and_tn[0])-2]
-
+	transactionNum := command_type_and_tn[0][1 : len(command_type_and_tn[0])-1]
+	
+	fmt.Println(transactionNum)
 	if command_type == "ADD" {
 		req := Add{}
 		req.TransactionNum, _ = strconv.Atoi(transactionNum)
-		req.UserID = arguments[2]
-		req.Amount, _ = strconv.Atoi(arguments[3])
+		req.UserID = arguments[1]
+		req.Amount, _ = strconv.ParseFloat(arguments[2], 64)
 		sendToWebServer(req, command_type)
 	}
 
@@ -70,7 +75,7 @@ func sendRequest(line string) {
 		req.TransactionNum, _ = strconv.Atoi(transactionNum)
 		req.UserID = arguments[1]
 		req.Symbol = arguments[2]
-		req.Amount, _ = strconv.Atoi(arguments[3])
+		req.Amount, _ = strconv.ParseFloat(arguments[3], 64)
 		sendToWebServer(req, command_type)
 	}
 
@@ -102,7 +107,7 @@ func sendRequest(line string) {
 
 func sendToWebServer(r interface{}, s string) {
 	jsonValue, _ := json.Marshal(r)
-	req, _ := http.NewRequest("POST", "http://localhost:8123"+strings.ToLower(s), bytes.NewBuffer(jsonValue))
+	req, _ := http.NewRequest("POST", "http://localhost:8123/"+strings.ToLower(s), bytes.NewBuffer(jsonValue))
 	req.Close = true
 
 	req.Header.Set("Content-Type", "application/json")
@@ -115,11 +120,15 @@ func sendToWebServer(r interface{}, s string) {
 }
 
 func main() {
-	file, _ := os.Open("final_workload_2019.txt")
+	file, _ := os.Open("final_workload_2019")
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
+
 		commandText := scanner.Text()
+		fmt.Println(commandText)
+
 		sendRequest(commandText)
+
 	}
 }
