@@ -38,7 +38,8 @@ func failOnError(err error, msg string) {
 
 func failOnErrorNew(w http.ResponseWriter, err error, msg string) {
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		// w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(msg))
 	}
 }
 
@@ -71,7 +72,13 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	failOnErrorNew(w, err1, "Failed to post the request")
 
 	_, err = ioutil.ReadAll(r1.Body)
-	w.WriteHeader(http.StatusOK)
+	if (r1.StatusCode == 400) {
+		fmt.Println("ok web server got bad req back from trans")
+		w.WriteHeader(http.StatusBadRequest)
+	} else if (r1.StatusCode == 200) {
+		fmt.Println("ok web got 200 back from trans")
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 func quoteHandler(w http.ResponseWriter, r *http.Request) {
@@ -139,14 +146,17 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	r1, err := http.Post(transactionServer+"/buy", "application/json; charset=utf-8", b)
 	failOnErrorNew(w, err, "Failed to post the request")
 
-	_, err = ioutil.ReadAll(r1.Body)
-	if (r1.StatusCode == 400) {
-		fmt.Println("ok web server got bad req back from trans")
-		w.WriteHeader(http.StatusBadRequest)
-	} else if (r1.StatusCode == 200) {
-		fmt.Println("ok web got 200 back from trans")
-		w.WriteHeader(http.StatusOK)
-	}
+	body, err := ioutil.ReadAll(r1.Body)
+	fmt.Println([]byte(body))
+	w.Write([]byte(body))
+	// if (r1.StatusCode == 200) {
+	// 	fmt.Println("ok web got 200 back from trans")
+	// 	w.WriteHeader(http.StatusOK)
+	// } else {
+	// 	fmt.Println("insidee else")
+	// 	fmt.Println([]byte(body))
+	// 	w.Write([]byte(body))
+	// }
 }
 
 func commitBuyHandler(w http.ResponseWriter, r *http.Request) {

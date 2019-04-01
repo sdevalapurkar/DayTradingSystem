@@ -51,12 +51,12 @@ export default class Trading extends Component {
             'transactionNum': 1,
         })
         .then(response => {
-                if (response.status == 200) {
-                    alert('You have succcessfully committed your buy transaction!');
-                }
+            if (response.status == 200) {
+                alert('You have succcessfully committed your buy transaction!');
+            }
         })
         .catch(err => {
-                console.log('err is: ', err);
+            alert('Oops, something went wrong. Please try again later.');
         });
 
         this.setState({ buyOpen: false });
@@ -69,12 +69,12 @@ export default class Trading extends Component {
             'transactionNum': 1,
         })
         .then(response => {
-                if (response.status == 200) {
-                    alert('You have succcessfully cancelled your buy transaction!');
-                }
+            if (response.status == 200) {
+                alert('You have succcessfully cancelled your buy transaction!');
+            }
         })
         .catch(err => {
-                console.log('err is: ', err);
+            alert('Oops, something went wrong. Please try again later.');
         });
 
         this.setState({ buyOpen: false });
@@ -104,35 +104,25 @@ export default class Trading extends Component {
             return;
         }
 
-        console.log(this.props.userState.userID);
-        console.log('user id is: ', this.props.userState.userID + 'and type is: ', typeof(this.props.userState.userID));
-        console.log('symbol is', this.state.quoteSymbol + 'and its type is: ', typeof(this.state.quoteSymbol));
-
-      const userID = this.props.userState.userID;
-      axios.post(`${host}:${port}/quote`, {
+        const userID = this.props.userState.userID;
+        axios.post(`${host}:${port}/quote`, {
             'userID': userID,
             'symbol': this.state.quoteSymbol,
             'transactionNum': 1,
-      })
-      .then(response => {
-            console.log('response is: ', response);
-            console.log('response.data before object destructing: ', response.data);
+        })
+        .then(response => {
             const obj = { quote: response.data };
-            response.data = { ...obj, userID };
-            console.log('response.data ', response.data);
-      })
-      .catch(err => {
-            console.log('err is: ', err);
-      });
+            alert(`The stock ${this.state.quoteSymbol} is currently valued at: $${obj.quote}`);
+        })
+        .catch(err => {
+            alert('Oops, something went wrong. Please ensure you are entering a valid stock symbol. A valid stock symbol must be within 1-3 characters in length and must not contain any numbers or special characters.');
+        });
     }
 
     addAmount() {
         if (!this.isPositiveNumber(this.state.amountToAdd)) {
             return;
         }
-
-        console.log(this.state.amountToAdd);
-        console.log(typeof(this.state.amountToAdd));
 
         const userID = this.props.userState.userID;
         axios.post(`${host}:${port}/add`, {
@@ -141,13 +131,12 @@ export default class Trading extends Component {
             'transactionNum': 1,
         })
         .then(response => {
-            console.log(response);
             if (response.status == 200) {
-                alert('Successfully added the amount to your account!');
+                alert(`Successfully added $${this.state.amountToAdd} to your account!`);
             }
         })
         .catch(err => {
-                console.log('err is: ', err);
+            alert('Oops, something went wrong. Please ensure that you are entering a valid dollar amount to add to your account. Valid dollar amounts are positive numbers.');
         });
     }
 
@@ -158,9 +147,7 @@ export default class Trading extends Component {
         } else if (!this.state.stockToBuy) {
             alert('Please enter a stock symbol.');
             return;
-        }
-
-        if (!this.isPositiveNumber(this.state.amountToBuy)) {
+        } else if (!this.isPositiveNumber(this.state.amountToBuy)) {
             return;
         }
 
@@ -172,15 +159,14 @@ export default class Trading extends Component {
             'transactionNum': 1,
         })
         .then(response => {
-            console.log(response);
-                if (response.status == 200) {
-                    this.handleClickOpen();
-                } else {
-                    alert('Please ensure you have sufficient funds in your account.');
-                }
+            console.log('response: ', response);
+            if (response.status == 200) {
+                this.handleClickOpen();
+            }
         })
         .catch(err => {
-                alert('Please ensure you have sufficient funds in your account.');
+            console.log('err: ', err);
+            alert('Please ensure you have sufficient funds in your account.');
         });
     }
 
@@ -191,8 +177,7 @@ export default class Trading extends Component {
         } else if (!this.state.stockToSell) {
             alert('Please enter a stock symbol.');
             return;
-        }
-        if (!this.isPositiveNumber(this.state.amountToSell)) {
+        } else if (!this.isPositiveNumber(this.state.amountToSell)) {
             return;
         }
 
@@ -203,14 +188,11 @@ export default class Trading extends Component {
             'symbol': this.state.stockToSell,
             'transactionNum': 1,
         })
-        .then(response => {
-                console.log('response is: ', response);
-                response.data = { ...response.data, userID: this.state.userID };
-                console.log('response.data ', response.data);
-                this.handleClickOpenSell();
+        .then(response => {    
+            this.handleClickOpenSell();
         })
         .catch(err => {
-                console.log('err is: ', err);
+            alert(`Please ensure you have sufficient amount of the stock ${this.state.stockToSell} in your account.`);
         });
     }
 

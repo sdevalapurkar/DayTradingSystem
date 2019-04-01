@@ -44,7 +44,9 @@ func failOnError(err error, msg string) {
 
 func failOnErrorNew(w http.ResponseWriter, err error, msg string) {
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		// w.WriteHeader(http.StatusBadRequest)
+		fmt.Printf("%s", msg)
+		w.Write([]byte(msg))
 	}
 }
 

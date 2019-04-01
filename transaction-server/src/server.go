@@ -280,7 +280,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		cache.LPush(req.UserID+":buy", req.Symbol+":"+strconv.Itoa(buyNumber))
 		w.WriteHeader(http.StatusOK)
 	} else {
-		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Insufficient funds mate"))
 	}
 }
 

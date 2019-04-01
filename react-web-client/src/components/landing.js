@@ -22,7 +22,7 @@ class Landing extends Component {
               </img>
               <div className="slogan">
                 <strong className="slogan-name">
-                  We make Day Trading Easy!
+                  We Make Day Trading Easy!
                 </strong>
               </div>
             </div>
