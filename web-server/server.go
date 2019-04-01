@@ -229,16 +229,20 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse the request")
+	failOnErrorNew(w, err, "Failed to parse the request")
 
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r1, err := http.Post(transactionServer+"/sell", "application/json; charset=utf-8", b)
-	failOnError(err, "Failed to post the request")
+	failOnErrorNew(w, err, "Failed to post the request")
 
-	body, err := ioutil.ReadAll(r1.Body)
-	w.Write([]byte(body))
+	_, err = ioutil.ReadAll(r1.Body)
+	if (r1.StatusCode == 400) {
+		w.WriteHeader(http.StatusBadRequest)
+	} else if (r1.StatusCode == 200) {
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 func commitSellHandler(w http.ResponseWriter, r *http.Request) {
@@ -256,16 +260,20 @@ func commitSellHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse the request")
+	failOnErrorNew(w, err, "Failed to parse the request")
 
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r1, err := http.Post(transactionServer+"/commit_sell", "application/json; charset=utf-8", b)
-	failOnError(err, "Failed to post the request")
+	failOnErrorNew(w, err, "Failed to post the request")
 
-	body, err := ioutil.ReadAll(r1.Body)
-	w.Write([]byte(body))
+	_, err = ioutil.ReadAll(r1.Body)
+	if (r1.StatusCode == 400) {
+		w.WriteHeader(http.StatusBadRequest)
+	} else if (r1.StatusCode == 200) {
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
@@ -283,16 +291,20 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse the request")
+	failOnErrorNew(w, err, "Failed to parse the request")
 
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r1, err := http.Post(transactionServer+"/cancel_sell", "application/json; charset=utf-8", b)
-	failOnError(err, "Failed to post the request")
+	failOnErrorNew(w, err, "Failed to post the request")
 
-	body, err := ioutil.ReadAll(r1.Body)
-	w.Write([]byte(body))
+	_, err = ioutil.ReadAll(r1.Body)
+	if (r1.StatusCode == 400) {
+		w.WriteHeader(http.StatusBadRequest)
+	} else if (r1.StatusCode == 200) {
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
