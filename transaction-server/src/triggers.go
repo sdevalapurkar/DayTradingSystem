@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -13,7 +14,7 @@ import (
 // 		Symbol: 		(string) the symbol of the stock being triggered
 //		method:			(string) the type of action to perform, one of ("buy", "sell")
 //
-func fireTrigger(UserID string, Symbol string, method string) {
+func fireTrigger(w http.ResponseWriter, UserID string, Symbol string, method string) {
 
 	// Get transaction num
 	var transactionNum int
@@ -66,7 +67,7 @@ func fireTrigger(UserID string, Symbol string, method string) {
 
 	// Add/subtract the stocks to user's account
 	if method == "buy" {
-		buyStock(UserID, Symbol, strconv.Itoa(quantity), transactionNum)
+		buyStock(w, UserID, Symbol, strconv.Itoa(quantity), transactionNum)
 		logSystemEvent(transactionNum, "transaction-server", "BUY", UserID, Symbol, "", float64(quantity))
 	} else {
 		sellStock(UserID, Symbol, strconv.Itoa(quantity), transactionNum)
@@ -80,7 +81,7 @@ func fireTrigger(UserID string, Symbol string, method string) {
 // 		Symbol: 		(string) the symbol of the stock being triggered
 //		method:			(string) the type of action to perform, one of ("buy", "sell")
 //
-func evalTrigger(UserID string, Symbol string, method string) bool {
+func evalTrigger(w http.ResponseWriter, UserID string, Symbol string, method string) bool {
 	queryString := "SELECT price, transaction_num FROM triggers WHERE symbol = $1 AND user_id = $2 and method = $3;"	
 
 	stmt, err := db.Prepare(queryString)
@@ -109,7 +110,7 @@ func evalTrigger(UserID string, Symbol string, method string) bool {
 		}
 		// If the difference if greater than or equal to 0, fire the trigger!
 		if diff >= 0 {
-			fireTrigger(UserID, Symbol, method)
+			fireTrigger(w, UserID, Symbol, method)
 			return true
 		} else {
 			// The trigger still exists, but should not be fired yet so we are not done monitoring yet
@@ -125,14 +126,14 @@ func evalTrigger(UserID string, Symbol string, method string) bool {
 // 		Symbol: 		(string) the symbol of the stock being triggered
 //		method:			(string) the type of action to perform, one of ("buy", "sell")
 //
-func monitorTrigger(UserID string, Symbol string, method string) {
+func monitorTrigger(w http.ResponseWriter, UserID string, Symbol string, method string) {
 	// Create a ticker that fires every 60 seconds
 	ticker := time.NewTicker(10 * time.Second)
 
 	// Every time the ticker fires, check the trigger
 	for _ = range ticker.C {
 		//fmt.Println("Tick at", i)
-		done := evalTrigger(UserID, Symbol, method)
+		done := evalTrigger(w, UserID, Symbol, method)
 		if done {
 			//fmt.Println("here")
 			return

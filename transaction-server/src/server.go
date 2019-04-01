@@ -149,8 +149,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	// Read request json into struct
 	err := decoder.Decode(&req)
 	if err != nil {
-
-		failGracefully(err, "Failed to get add request")
+		failOnErrorNew(w, err, "Failed to get add request")
 	}
 
 	fmt.Println(req.UserID)
@@ -172,19 +171,19 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	stmt, err := db.Prepare(queryString)
 	if err != nil {
 
-		failGracefully(err, "Failed to prep query")
+		failOnErrorNew(w, err, "Failed to prep query")
 	}
 
 	res, err := stmt.Exec(req.UserID, req.Amount)
 	if err != nil {
 
-		failGracefully(err, "Failed to do something with query")
+		failOnErrorNew(w, err, "Failed to do something with query")
 	}
 
 	// Check the query actually did something (because this one should always modify something, unless add 0..?)
 	numrows, err := res.RowsAffected()
 	if numrows < 1 {
-		failOnError(err, "Failed to add balance")
+		failOnErrorNew(w, err, "Failed to add balance")
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -206,7 +205,7 @@ func quoteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse request")
+	failOnErrorNew(w, err, "Failed to parse request")
 	// logUserCommand(req.TransactionNum, "transaction-server", "QUOTE", req.UserID, req.Symbol, "", 0.0)
 
 	// Get quote for the requested stock symbol
@@ -234,12 +233,12 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Read request json data into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse the request")
+	failOnErrorNew(w, err, "Failed to parse the request")
 
 	logUserCommand(req.TransactionNum, "transaction-server", "BUY", req.UserID, req.Symbol, "", req.Amount)
 
 	if req.Amount < 0 {
-		failGracefully(err, "Cannot purchase a negative amount")
+		failOnErrorNew(w, err, "Cannot purchase a negative amount")
 	}
 
 	// Get price of requested stock
@@ -252,14 +251,14 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	queryString := "SELECT balance FROM users WHERE user_id = $1;"
 	// Try to prepare query
 	stmt, err := db.Prepare(queryString)
-	failOnError(err, "Failed to prepare query")
+	failOnErrorNew(w, err, "Failed to prepare query")
 
 	var balance float64
 
 	// Try to perform the query and get the user's balance
 	// TODO: this should probably handle a user buy when the user doesn't exist, but it doesn't right now.
 	err = stmt.QueryRow(req.UserID).Scan(&balance)
-	failOnError(err, "Failed to get user balance")
+	failOnErrorNew(w, err, "Failed to get user balance")
 	defer stmt.Close()
 
 	fmt.Println(balance)
@@ -270,15 +269,15 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		// User has enough, reserve the funds by pulling them from the account
 		queryString = "UPDATE users SET balance = balance - $1 WHERE user_id = $2"
 		stmt, err := db.Prepare(queryString)
-		failOnError(err, "Failed to prepare withdraw query")
+		failOnErrorNew(w, err, "Failed to prepare withdraw query")
 
 		// Withdraw funds from user's account
 		res, err := stmt.Exec(cost, req.UserID)
-		failOnError(err, "Failed to withdraw money from user account")
+		failOnErrorNew(w, err, "Failed to withdraw money from user account")
 
 		numrows, err := res.RowsAffected()
 		if numrows < 1 {
-			failOnError(err, "Failed to reserve funds")
+			failOnErrorNew(w, err, "Failed to reserve funds")
 		}
 		// Add buy transaction to front of user's transaction list
 		cache.LPush(req.UserID+":buy", req.Symbol+":"+strconv.Itoa(buyNumber))
@@ -304,7 +303,7 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse request parameters into struct (just user_id)
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse request")
+	failOnErrorNew(w, err, "Failed to parse request")
 
 	logUserCommand(req.TransactionNum, "transaction-server", "COMMIT_BUY", req.UserID, "", "", 0.0)
 
@@ -314,31 +313,33 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if there are any buy transactions to perform
 	if len(tasks) <= 1 {
-		w.Write([]byte("Failed to commit buy transaction: no buy orders exist"))
+		fmt.Println("len of tasks in commit buy is <=1 ")
+		w.WriteHeader(http.StatusBadRequest)
+		// w.Write([]byte("Failed to commit buy transaction: no buy orders exist"))
 		return
 	}
 
 	// Add new stocks to user's account
-	buyStock(req.UserID, tasks[0], tasks[1], req.TransactionNum)
+	buyStock(w, req.UserID, tasks[0], tasks[1], req.TransactionNum)
 	w.WriteHeader(http.StatusOK)
 }
 
-func buyStock(UserID string, Symbol string, quantity string, transactionNum int) {
+func buyStock(w http.ResponseWriter, UserID string, Symbol string, quantity string, transactionNum int) {
 	// Add new stocks to user's account
 	queryString := "INSERT INTO stocks (quantity, symbol, user_id) VALUES ($1, $2, $3) " +
 		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $1;"
 	stmt, err := db.Prepare(queryString)
-	failOnError(err, "Failed to prepare query")
+	failOnErrorNew(w, err, "Failed to prepare query")
 	res, err := stmt.Exec(quantity, Symbol, UserID)
-	failGracefully(err, "Failed to add stocks to account")
+	failOnErrorNew(w, err, "Failed to add stocks to account")
 
 	numrows, err := res.RowsAffected()
 	if numrows < 1 {
-		failGracefully(err, "Failed to add stocks to account")
+		failOnErrorNew(w, err, "Failed to add stocks to account")
 	}
 
 	f, err := strconv.ParseFloat(quantity, 64)
-	failOnError(err, "Failed to parse float")
+	failOnErrorNew(w, err, "Failed to parse float")
 	logAccountTransaction(transactionNum, "transaction-server", "BUY", UserID, f) // todo add transnum
 }
 
@@ -357,7 +358,7 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse request")
+	failOnErrorNew(w, err, "Failed to parse request")
 
 	cache.LPop(req.UserID + ":buy")
 
@@ -627,7 +628,7 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go monitorTrigger(req.UserID, req.Symbol, "buy")
+	go monitorTrigger(w, req.UserID, req.Symbol, "buy")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -708,7 +709,7 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go monitorTrigger(req.UserID, req.Symbol, "sell")
+	go monitorTrigger(w, req.UserID, req.Symbol, "sell")
 	w.WriteHeader(http.StatusOK)
 }
 
