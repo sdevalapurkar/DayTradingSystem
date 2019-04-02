@@ -21,13 +21,13 @@ func fireTrigger(w http.ResponseWriter, UserID string, Symbol string, method str
 	queryString := "SELECT transaction_num FROM triggers WHERE user_id = $1 AND symbol = $2 AND method = $3;"
 	stmt, err := db.Prepare(queryString)
 	if err != nil {
-		failGracefully(err, "Failed to prepare transactionNum query")
+		failOnErrorNew(w, err, "Failed to prepare transactionNum query")
 		return
 	}
 	err = stmt.QueryRow(UserID, Symbol, method).Scan(&transactionNum)
 
 	if err != nil {
-		failGracefully(err, "Failed to get transactionNum")
+		failOnErrorNew(w, err, "Failed to get transactionNum")
 		return
 	}
 
@@ -35,33 +35,36 @@ func fireTrigger(w http.ResponseWriter, UserID string, Symbol string, method str
 	queryString = "DELETE FROM triggers WHERE user_id = $1 AND symbol = $2 AND method = $3;"
 	rows, err := db.Query(queryString, UserID, Symbol, method)
 	if err != nil{
-		failGracefully(err, "Failed to delete trigger after firing")
+		failOnErrorNew(w, err, "Failed to delete trigger after firing")
 		return
 	}
 	defer rows.Close()
 
 	whereCond := "WHERE user_id = $1 AND symbol = $2"
 
+	var amount float64
 	var quantity int
 	// Get quantity of stock to buy/sell
 	queryString = "SELECT quantity FROM " + method + "_amounts " + whereCond
 	stmt, err = db.Prepare(queryString)
 	if err != nil {
-		failGracefully(err, "Failed to prepare SELECT quantity query")
+		failOnErrorNew(w, err, "Failed to prepare SELECT quantity query")
 		return
 	}
-	err = stmt.QueryRow(UserID, Symbol).Scan(&quantity)
+	err = stmt.QueryRow(UserID, Symbol).Scan(&amount)
 	if err != nil {
-		failGracefully(err, "Failed to get quantity from "+method+"_amounts")
+		failOnErrorNew(w, err, "Failed to get quantity from "+method+"_amounts")
 		return
 	}
+
+	quantity = int(amount / getQuote(Symbol, transactionNum, UserID))
 
 	// Delete buy/sell amount from user's account
 	queryString = "DELETE FROM " + method + "_amounts " + whereCond
 	rows, err = db.Query(queryString, UserID, Symbol)
 	if err != nil {
 
-		failGracefully(err, "Failed to delete "+method+" amount after trigger fire")
+		failOnErrorNew(w, err, "Failed to delete "+method+" amount after trigger fire")
 	}
 	defer rows.Close()
 
@@ -87,7 +90,7 @@ func evalTrigger(w http.ResponseWriter, UserID string, Symbol string, method str
 	stmt, err := db.Prepare(queryString)
 	if err != nil {
 
-		failGracefully(err, "Failed to prepare query")
+		failOnErrorNew(w, err, "Failed to prepare query")
 	}
 	res := struct {
 		triggerPrice   float64

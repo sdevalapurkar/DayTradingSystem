@@ -435,7 +435,7 @@ func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 
 func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	w.WriteHeader(http.StatusOK)
+
 	req := struct {
 		UserID         string
 		Symbol         string
@@ -443,15 +443,20 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 		TransactionNum int
 	}{"", "", 0.0, 0}
 
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse the request")
+	failOnErrorNew(w, err, "Failed to parse the request")
 
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r1, err := http.Post(transactionServer+"/set_sell_trigger", "application/json; charset=utf-8", b)
-	failOnError(err, "Failed to post the request")
+	failOnErrorNew(w, err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
 	w.Write([]byte(body))
@@ -459,22 +464,27 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 
 func cancelSetSellHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	w.WriteHeader(http.StatusOK)
+
 	req := struct {
 		UserID         string
 		Symbol         string
 		TransactionNum int
 	}{"", "", 0}
 
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse the request")
+	failOnErrorNew(w, err, "Failed to parse the request")
 
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r1, err := http.Post(transactionServer+"/cancel_set_sell", "application/json; charset=utf-8", b)
-	failOnError(err, "Failed to post the request")
+	failOnErrorNew(w, err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
 	w.Write([]byte(body))

@@ -38,6 +38,9 @@ export default class Trading extends Component {
             stockForCancelBuyAmount: '',
             stockForSellAmount: '',
             amountForSellAmount: 0,
+            stockForSellTrigger: '',
+            amountForSellTrigger: 0,
+            stockForCancelSellAmount: 0,
         }
     }
 
@@ -343,8 +346,8 @@ export default class Trading extends Component {
         const userID = this.props.userState.userID;
         axios.post(`${host}:${port}/set_buy_trigger`, {
             'userID': userID,
-            'amount': parseFloat(this.state.amountForBuyTrigger),
             'symbol': this.state.stockForBuyTrigger,
+            'price': parseFloat(this.state.amountForBuyTrigger),
             'transactionNum': 1,
         })
         .then(response => {
@@ -416,6 +419,63 @@ export default class Trading extends Component {
         .catch(err => {});
     }
 
+    setSellTrigger() {
+        if (this.state.stockForSellTrigger.length > 3) {
+            alert('Please enter a valid stock symbol.');  
+            return;
+        } else if (!this.state.stockForSellTrigger) {
+            alert('Please enter a stock symbol.');
+            return;
+        } else if (!this.isPositiveNumber(this.state.amountForSellTrigger)) {
+            return;
+        }
+
+        const userID = this.props.userState.userID;
+        axios.post(`${host}:${port}/set_sell_trigger`, {
+            'userID': userID,
+            'symbol': this.state.stockForSellTrigger,
+            'price': parseFloat(this.state.amountForSellTrigger),
+            'transactionNum': 1,
+        })
+        .then(response => {
+            if (response.data != '') {
+                alert(response.data);
+                return;
+            }
+            if (response.data == '' && response.status == 200) {
+                alert(`Successfully set sell trigger for stock ${this.state.stockForSellTrigger}.`);
+            }
+        })
+        .catch(err => {});
+    }
+
+    cancelSetSellAmount() {
+        if (this.state.stockForCancelSellAmount.length > 3) {
+            alert('Please enter a valid stock symbol.');  
+            return;
+        } else if (!this.state.stockForCancelSellAmount) {
+            alert('Please enter a stock symbol.');
+            return;
+        }
+
+        const userID = this.props.userState.userID;
+        axios.post(`${host}:${port}/cancel_set_sell`, {
+            'userID': userID,
+            'symbol': this.state.stockForCancelSellAmount,
+            'transactionNum': 1,
+        })
+        .then(response => {
+            if (response.data != '') {
+                alert(response.data);
+                return;
+            }
+            if (response.data == '' && response.status == 200) {
+                alert(`Successfully cancelled set sell for stock ${this.state.stockForCancelSellAmount}.`);
+            }
+        })
+        .catch(err => {});
+    }
+
     render() {
         return (
             <div>
@@ -482,6 +542,21 @@ export default class Trading extends Component {
                         <input className="input-class-name" placeholder="Enter amount" type="text" onChange={evt => this.setState({ amountForSellAmount: evt.target.value })} />
                     </label>
                     <input className="button-fancy-newer" value="Set Sell Amount" onClick={() => this.setSellAmount()} />
+                </form>
+                <form className="form-class-name">
+                    <p>Set Sell Trigger:</p>
+                    <label>
+                        <input className="input-class-name" placeholder="Enter stock symbol" type="text" onChange={evt => this.setState({ stockForSellTrigger: evt.target.value })} />
+                        <input className="input-class-name" placeholder="Enter amount" type="text" onChange={evt => this.setState({ amountForSellTrigger: evt.target.value })} />
+                    </label>
+                    <input className="button-fancy-newer" value="Set Buy Trigger" onClick={() => this.setSellTrigger()} />
+                </form>
+                <form className="form-class-name">
+                    <p>Cancel Sell Amount/Trigger:</p>
+                    <label>
+                        <input className="input-class-name" placeholder="Enter stock symbol" type="text" onChange={evt => this.setState({ stockForCancelSellAmount: evt.target.value })} />
+                    </label>
+                    <input className="button-fancy-newest" value="Cancel Buy Amount/Trigger" onClick={() => this.cancelSetSellAmount()} />
                 </form>
                 <p></p>
                 <p></p>

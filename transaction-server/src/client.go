@@ -87,3 +87,14 @@ func getOwnedStocks(UserID string) []StockRows {
 	}
 	return stocks
 }
+
+// type BuyTriggerRows struct {
+// 	Symbol string
+// 	Amount float64
+// }
+
+// func getSetBuyTriggers(UserID string) []BuyTriggerRows {
+// 	buyTriggers := []BuyTriggerRows{}
+
+// 	queryString := "SELECT symbol, price FROM triggers"
+// }

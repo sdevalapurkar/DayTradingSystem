@@ -660,6 +660,9 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("price")
+	fmt.Println(req.Price)
+
 	logUserCommand(req.TransactionNum, "transaction-server", "SET_BUY_TRIGGER", req.UserID, req.Symbol, "", req.Price)
 
 	queryString = "INSERT INTO triggers (user_id, symbol, price, method, transaction_num) VALUES ($1, $2, $3, 'buy', $4) " +
@@ -753,26 +756,43 @@ func setSellTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse request")
 
+	whereCond := "WHERE user_id = $1 AND symbol = $2"
+	queryString := "SELECT count(*) FROM sell_amounts " + whereCond
+	stmt, err := db.Prepare(queryString)
+	if err != nil {
+		failOnErrorNew(w, err, "Failed to prepare SELECT count query")
+	}
+	var quantity int
+	err = stmt.QueryRow(req.UserID, req.Symbol).Scan(&quantity)
+	if err != nil {
+		failOnErrorNew(w, err, "Failed to get quantity from sell_amounts")
+	}
+
+	if quantity == 0 {
+		w.Write([]byte("No sell amount set for the stock. Please set a sell amount prior to setting a trigger."))
+		return
+	}
+
 	logUserCommand(req.TransactionNum, "transaction-server", "SET_SELL_TRIGGER", req.UserID, req.Symbol, "", req.Price)
 
-	queryString := "INSERT INTO triggers (user_id, symbol, price, method, transaction_num) VALUES ($1, $2, $3, 'sell', $4) " +
+	queryString = "INSERT INTO triggers (user_id, symbol, price, method, transaction_num) VALUES ($1, $2, $3, 'sell', $4) " +
 		"ON CONFLICT (user_id, symbol, method) DO UPDATE SET price = $3;"
 
-	stmt, err := db.Prepare(queryString)
-	failOnError(err, "Failed to prepare query statement")
+	stmt, err = db.Prepare(queryString)
+	failOnErrorNew(w, err, "Failed to prepare query statement")
 
 	res, err := stmt.Exec(req.UserID, req.Symbol, req.Price, req.TransactionNum)
 
 	if err != nil {
 		failGracefully(err, "Failed to add sell trigger")
-		w.Write([]byte("Failed to add trigger"))
+		w.Write([]byte("Failed to add sell trigger"))
 		return
 	}
 
 	numrows, err := res.RowsAffected()
 	if numrows < 1 {
 		failGracefully(err, "Failed to add sell trigger")
-		w.Write([]byte("Failed to add trigger"))
+		w.Write([]byte("Failed to add sell trigger"))
 		return
 	}
 	var wg sync.WaitGroup
@@ -793,7 +813,25 @@ func cancelSetSellHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse request parameters into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse request")
+	failOnErrorNew(w, err, "Failed to parse request")
+
+	whereCond := "WHERE user_id = $1 AND symbol = $2"
+	queryString := "SELECT count(*) FROM sell_amounts " + whereCond
+	stmt, err := db.Prepare(queryString)
+	if err != nil {
+		failOnErrorNew(w, err, "Failed to prepare SELECT count query")
+	}
+	var quantity int
+	err = stmt.QueryRow(req.UserID, req.Symbol).Scan(&quantity)
+	if err != nil {
+		failOnErrorNew(w, err, "Failed to get quantity from sell_amounts")
+	}
+
+	if quantity == 0 {
+		w.Write([]byte("No sell amount set for the stock. Please set a sell amount prior to cancelling set sell."))
+		return
+	}
+
 	logUserCommand(req.TransactionNum, "transaction-server", "CANCEL_SET_SELL", req.UserID, req.Symbol, "", 0.0)
 
 	queryString1 := "DELETE FROM sell_amounts WHERE user_id = $1 AND symbol = $2;"
