@@ -381,6 +381,11 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnErrorNew(w, err, "Failed to parse request")
+	fmt.Println("what about here??")
+	fmt.Println("printin the req variables:")
+	fmt.Println(req.UserID)
+	fmt.Println(req.Amount)
+	fmt.Println(req.Symbol)
 	logUserCommand(req.TransactionNum, "transaction-server", "SELL", req.UserID, req.Symbol, "", req.Amount)
 
 	price := getQuote(req.Symbol, req.TransactionNum, req.UserID)
@@ -528,26 +533,43 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse request into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse request")
+	failOnErrorNew(w, err, "Failed to parse request")
+
+	whereCond := "WHERE user_id = $1"
+	queryString := "SELECT balance FROM users " + whereCond
+	stmt, err := db.Prepare(queryString)
+	if err != nil {
+		failOnErrorNew(w, err, "Failed to prepare SELECT balance query")
+	}
+	var balance float64
+	err = stmt.QueryRow(req.UserID, req.Symbol).Scan(&balance)
+	if err != nil {
+		failOnErrorNew(w, err, "Failed to get balance from users")
+	}
+
+	if balance < req.Amount {
+		w.Write([]byte("Your account balance is less than the amount you wish to buy. Please add funds to your account first."))
+		return
+	}
 
 	logUserCommand(req.TransactionNum, "transaction-server", "SET_BUY_AMOUNT", req.UserID, req.Symbol, "", req.Amount)
 
 	// Add buy amount to user's account. If a buy amount already exists for the requested stock, add this to it
-	queryString := "INSERT INTO buy_amounts (user_id, symbol, quantity) VALUES ($1, $2, $3) " +
+	queryString = "INSERT INTO buy_amounts (user_id, symbol, quantity) VALUES ($1, $2, $3) " +
 		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $3;"
 
-	stmt, err := db.Prepare(queryString)
-	failOnError(err, "Failed to prepare query")
+	stmt, err = db.Prepare(queryString)
+	failOnErrorNew(w, err, "Failed to prepare query")
 	res, err := stmt.Exec(req.UserID, req.Symbol, req.Amount)
 
 	if err != nil {
-		failGracefully(err, "Failed to update buy amount")
+		failOnErrorNew(w, err, "Failed to update buy amount")
 		return
 	}
 
 	numrows, err := res.RowsAffected()
 	if numrows < 1 {
-		failGracefully(err, "Failed to update buy amount")
+		failOnErrorNew(w, err, "Failed to update buy amount")
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -565,7 +587,24 @@ func cancelSetBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse request parameters into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse request")
+	failOnErrorNew(w, err, "Failed to parse request")
+
+	whereCond := "WHERE user_id = $1 AND symbol = $2"
+	queryString := "SELECT count(*) FROM buy_amounts " + whereCond
+	stmt, err := db.Prepare(queryString)
+	if err != nil {
+		failOnErrorNew(w, err, "Failed to prepare SELECT count query")
+	}
+	var quantity int
+	err = stmt.QueryRow(req.UserID, req.Symbol).Scan(&quantity)
+	if err != nil {
+		failOnErrorNew(w, err, "Failed to get quantity from buy_amounts")
+	}
+
+	if quantity == 0 {
+		w.Write([]byte("No buy amount set for the stock. Please set a buy amount prior to cancelling set buy."))
+		return
+	}
 
 	logUserCommand(req.TransactionNum, "transaction-server", "CANCEL_SET_BUY", req.UserID, req.Symbol, "", 0.0)
 
@@ -602,28 +641,41 @@ func setBuyTriggerHandler(w http.ResponseWriter, r *http.Request) {
 	}{"", "", 0.0, 0}
 
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse request")
+	failOnErrorNew(w, err, "Failed to parse request")
+
+	whereCond := "WHERE user_id = $1 AND symbol = $2"
+	queryString := "SELECT count(*) FROM buy_amounts " + whereCond
+	stmt, err := db.Prepare(queryString)
+	if err != nil {
+		failOnErrorNew(w, err, "Failed to prepare SELECT count query")
+	}
+	var quantity int
+	err = stmt.QueryRow(req.UserID, req.Symbol).Scan(&quantity)
+	if err != nil {
+		failOnErrorNew(w, err, "Failed to get quantity from buy_amounts")
+	}
+
+	if quantity == 0 {
+		w.Write([]byte("No buy amount set for the stock. Please set a buy amount prior to setting a trigger."))
+		return
+	}
 
 	logUserCommand(req.TransactionNum, "transaction-server", "SET_BUY_TRIGGER", req.UserID, req.Symbol, "", req.Price)
 
-	queryString := "INSERT INTO triggers (user_id, symbol, price, method, transaction_num) VALUES ($1, $2, $3, 'buy', $4) " +
+	queryString = "INSERT INTO triggers (user_id, symbol, price, method, transaction_num) VALUES ($1, $2, $3, 'buy', $4) " +
 		"ON CONFLICT (user_id, symbol, method) DO UPDATE SET price = $3;"
 
-	stmt, err := db.Prepare(queryString)
-	failOnError(err, "Failed to prepare query statement")
+	stmt, err = db.Prepare(queryString)
+	failOnErrorNew(w, err, "Failed to prepare query statement")
 
 	res, err := stmt.Exec(req.UserID, req.Symbol, req.Price, req.TransactionNum)
 	if err != nil {
-		failGracefully(err, "Failed to add trigger")
-		w.Write([]byte("Failed to add trigger"))
-		return
+		failOnErrorNew(w, err, "Failed to add trigger")
 	}
 
 	numrows, err := res.RowsAffected()
 	if numrows < 1 {
-		failGracefully(err, "Failed to add trigger")
-		w.Write([]byte("Failed to add trigger"))
-		return
+		failOnErrorNew(w, err, "Failed to add trigger")
 	}
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -644,28 +696,45 @@ func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse request into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse request")
+	failOnErrorNew(w, err, "Failed to parse request")
+
+	quote := getQuote(req.Symbol, req.TransactionNum, req.UserID)
+
+	whereCond := "WHERE user_id = $1 AND symbol = $2"
+	queryString := "SELECT quantity FROM stocks " + whereCond
+	stmt, err := db.Prepare(queryString)
+	if err != nil {
+		failOnErrorNew(w, err, "Failed to prepare SELECT quantity query")
+	}
+	var quantity int
+	err = stmt.QueryRow(req.UserID, req.Symbol).Scan(&quantity)
+	if err != nil {
+		failOnErrorNew(w, err, "You dont own any of this stock. Please buy some of this stock first.")
+		return
+	}
+
+	if quantity < int(req.Amount/quote) {
+		w.Write([]byte("You dont own enough of the stock you wish to sell. Please buy more of this stock first."))
+		return
+	}
 
 	logUserCommand(req.TransactionNum, "transaction-server", "SET_SELL_AMOUNT", req.UserID, req.Symbol, "", req.Amount)
 
 	// Add buy amount to user's account. If a buy amount already exists for the requested stock, add this to it
-	queryString := "INSERT INTO sell_amounts (user_id, symbol, quantity) VALUES ($1, $2, $3) " +
+	queryString = "INSERT INTO sell_amounts (user_id, symbol, quantity) VALUES ($1, $2, $3) " +
 		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $3;"
 
-	stmt, err := db.Prepare(queryString)
-	failOnError(err, "Failed to prepare query")
+	stmt, err = db.Prepare(queryString)
+	failOnErrorNew(w, err, "Failed to prepare query")
 
 	res, err := stmt.Exec(req.UserID, req.Symbol, req.Amount)
 	if err != nil {
-		failGracefully(err, "Failed to update sell amount")
-		w.Write([]byte("Failed to add trigger"))
+		failOnErrorNew(w, err, "Failed to update sell amount")
 	}
 
 	numrows, err := res.RowsAffected()
 	if numrows < 1 {
-		failGracefully(err, "Failed to update sell amount")
-		w.Write([]byte("Failed to update sell amount"))
-		return
+		failOnErrorNew(w, err, "Failed to update sell amount")
 	}
 	w.WriteHeader(http.StatusOK)
 }
