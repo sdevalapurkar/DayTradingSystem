@@ -19,25 +19,34 @@ class TestTransactionServer(unittest.TestCase):
         }
         requests.post(URL_ROOT + '/add', json=data)
         time.sleep(1)
-        self.c.execute('SELECT * FROM USERS;')
-        self.assertEqual(self.c.fetchone(), [100.0, 'User1'])
+        c = self.connection.cursor()
+        c.execute('SELECT * FROM users;')
+        self.assertEqual(c.fetchone(), [100.0, 'User1'])
+
+    def test_buy(self):
+        data = {
+          'userID': 'User1',
+          'amount': 100.00,
+          'symbol': 'abc',
+          'transactionNum': 2
+        }
+        requests.post(URL_ROOT + '/buy', json=data)
+        time.sleep(1)
+        c = self.connection.cursor()
+        c.execute('SELECT * FROM users;')
+        self.assertEqual(c.fetchone(), [100.0, 'User1'])
 
 
-#   def test_buy(self):
-#       data = {
-#           'userID': '69',
-#           'amount': 400,
-#           'symbol': 'abe'
-#       }
-#       r = requests.post(URL_ROOT + '/buy', json=data)
-
-
-#   def test_commit_buy(self):
-#       data = {
-#           'userID': '69'
-#       }
-#       r = requests.post(URL_ROOT + '/commit_buy', json=data)
-
+    def test_commit_buy(self):
+        data = {
+            'userID': 'User1',
+            'transactionNum': 3
+        }
+        requests.post(URL_ROOT + '/commit_buy', json=data)
+        time.sleep(1)
+        c = self.connection.cursor()
+        c.execute('SELECT * FROM users;')
+        self.assertEqual(c.fetchone(), [0.0, 'User1'])
 
 #   def test_cancel_buy(self):
 #       data = {
@@ -150,9 +159,10 @@ class TestTransactionServer(unittest.TestCase):
 #       }
 #       r = requests.post(URL_ROOT + '/quote', json=data)
 
-    def tearDown(self):
-        self.c.execute('DELETE FROM USERS;')
-
+    # def tearDown(self):
+    #     self.c.execute('DELETE FROM users;')
+    #     self.c.execute('DELETE FROM buy_amounts;')
+    #     self.connection.close()
 
 if __name__ == '__main__':
-  unittest.main()
+  unittest.main(warnings='ignore')
