@@ -11,8 +11,15 @@ import (
 	"sort"
 	"time"
 
-	_ "github.com/herenow/go-crate"
+	_ "github.com/lib/pq"
 	"github.com/streadway/amqp"
+)
+
+const (
+	host   = "audit-db"
+	port   = 5432
+	user   = "postgres"
+	dbname = "postgres"
 )
 
 var (
@@ -22,6 +29,8 @@ var (
 		}
 		return "http://localhost:4201"
 	}()
+
+	auditstring = fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable", host, port, user, dbname)
 
 	db = loadDb(auditstring)
 )
@@ -41,13 +50,12 @@ func failOnError(err error, msg string) {
 }
 
 func loadDb(dbstring string) *sql.DB {
-	db, err := sql.Open("crate", auditstring)
+	db, err := sql.Open("postgres", auditstring)
 
 	// If can't connect to DB
-	failOnError(err, "Couldn't connect to CrateDB")
+	failOnError(err, "Couldn't connect to DB")
 	err = db.Ping()
-	failOnError(err, "Couldn't ping CrateDB")
-	println("connected to db")
+	failOnError(err, "Couldn't ping DB")
 	return db
 }
 
@@ -213,7 +221,7 @@ func logUserCommandHandler() {
 				Filename       string
 				Funds          float64
 				Timestamp      int64
-			}{0, "", "", "", "", "", 0.0,0}
+			}{0, "", "", "", "", "", 0.0, 0}
 			err := json.Unmarshal(d.Body, &req)
 			failOnError(err, "Failed to parse the request")
 
@@ -285,8 +293,8 @@ func logSystemEventHandler() {
 				Stock          string
 				Filename       string
 				Funds          float64
-				Timestamp	   int64
-			}{0, "", "", "", "", "", 0.0,0}
+				Timestamp      int64
+			}{0, "", "", "", "", "", 0.0, 0}
 			err := json.Unmarshal(d.Body, &req)
 			failOnError(err, "Failed to parse the request")
 
@@ -358,7 +366,7 @@ func logQuoteServerHandler() {
 				QuoteServerTime int
 				Price           float64
 				Timestamp       int64
-			}{0, "", "", "", "", 0, 0.0,0}
+			}{0, "", "", "", "", 0, 0.0, 0}
 			err := json.Unmarshal(d.Body, &req)
 			failOnError(err, "Failed to parse the request")
 
@@ -426,8 +434,8 @@ func logAccountTransactionHandler() {
 				Action         string
 				Username       string
 				Funds          float64
-				Timestamp	   int64
-			}{0, "", "", "", 0.0,0}
+				Timestamp      int64
+			}{0, "", "", "", 0.0, 0}
 			err := json.Unmarshal(d.Body, &req)
 			failOnError(err, "Failed to parse the request")
 
@@ -573,7 +581,6 @@ func dumpLog(filename string, username string, isUser bool) {
 
 		logs = append(logs, logEvent)
 	}
-
 
 	// Get systemevents
 	queryString = "SELECT * FROM system_events" + userquery
