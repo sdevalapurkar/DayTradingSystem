@@ -11,17 +11,27 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
-	_ "github.com/herenow/go-crate"
 	"github.com/streadway/amqp"
+	_ "github.com/lib/pq"
 )
 
+const (
+	host = "transaction-db"
+	port = 5432
+	user = "postgres"
+	dbname = "postgres"
+)
+
+
 var (
-	dbstring = func() string {
-		if runningInDocker() {
-			return "http://transaction-db:4200"
-		}
-		return "http://localhost:4200"
-	}()
+//	dbstring = func() string {
+//		if runningInDocker() {
+//			return "http://transaction-db:4200"
+//		}
+//		return "http://localhost:4200"
+//	}()
+
+	dbstring = fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable", host, port, user, dbname)
 
 	db = loadDb()
 
@@ -108,7 +118,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Insert new user if they don't already exist, otherwise update their balance
 	queryString := "INSERT INTO users (user_id, balance) VALUES ($1, $2)" +
-		"ON CONFLICT (user_id) DO UPDATE SET balance = balance + $2"
+		"ON CONFLICT (user_id) DO UPDATE SET balance = users.balance + $2"
 
 	stmt, err := db.Prepare(queryString)
 	if err != nil {
@@ -247,7 +257,7 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 func buyStock(UserID string, Symbol string, quantity string, transactionNum int) {
 	// Add new stocks to user's account
 	queryString := "INSERT INTO stocks (quantity, symbol, user_id) VALUES ($1, $2, $3) " +
-		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $1;"
+		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = stocks.quantity + $1;"
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")
 	res, err := stmt.Exec(quantity, Symbol, UserID)
@@ -435,7 +445,7 @@ func setBuyAmountHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Add buy amount to user's account. If a buy amount already exists for the requested stock, add this to it
 	queryString := "INSERT INTO buy_amounts (user_id, symbol, quantity) VALUES ($1, $2, $3) " +
-		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $3;"
+		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = buy_amounts.quantity + $3;"
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -551,7 +561,7 @@ func setSellAmountHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Add buy amount to user's account. If a buy amount already exists for the requested stock, add this to it
 	queryString := "INSERT INTO sell_amounts (user_id, symbol, quantity) VALUES ($1, $2, $3) " +
-		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = quantity + $3;"
+		"ON CONFLICT (user_id, symbol) DO UPDATE SET quantity = sell_amounts.quantity + $3;"
 
 	stmt, err := db.Prepare(queryString)
 	failOnError(err, "Failed to prepare query")

@@ -16,11 +16,10 @@ services:
       - "8080:8080"
   transaction-db:
     build: 
-      context: transaction-server/crate/
+      context: transaction-server/postgres/
       dockerfile: Dockerfile
     ports:
-      - "4200:4200"
-      - "4300:4300"
+      - "5432:5432"
     volumes:  
       - transaction-db:/data
   audit:

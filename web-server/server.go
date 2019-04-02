@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"hash/fnv"
+//	"hash/fnv"
 )
 
 func runningInDocker() bool {
@@ -30,6 +30,7 @@ var transactionServer = func() string {
 //     err:    the error to check
 //     msg:    a message to print to the console if an error is found
 
+/*
 func hashServer(user string) string {
 	server1 := "http://192.168.1.250:8080"
 	server2 := "http://192.168.1.241:8080"
@@ -50,6 +51,10 @@ func hashServer(user string) string {
 	//	return server4
 	}
 	return server1
+}
+*/
+func hashServer(user string) string {
+	return "http://transaction:8080"
 }
 
 func failOnError(err error, msg string) {

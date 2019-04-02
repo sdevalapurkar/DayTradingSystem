@@ -14,19 +14,19 @@ CREATE TABLE IF NOT EXISTS stocks(
 CREATE TABLE IF NOT EXISTS buy_amounts(
     user_id VARCHAR(64),
     symbol VARCHAR(64),  
-    quantity INT,
+    quantity REAL,
     PRIMARY KEY (user_id, symbol)    
 );
 CREATE TABLE IF NOT EXISTS sell_amounts(
     user_id VARCHAR(64),
     symbol VARCHAR(64),  
-    quantity INT,
+    quantity REAL,
     PRIMARY KEY (user_id, symbol)
 );
 CREATE TABLE IF NOT EXISTS triggers(
     user_id VARCHAR(64),
     symbol VARCHAR(64),
-    price FLOAT,
+    price REAL,
     method VARCHAR(64),
     transaction_num INT,
     PRIMARY KEY (user_id, symbol, method)

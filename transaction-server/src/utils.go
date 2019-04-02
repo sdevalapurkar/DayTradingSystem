@@ -19,9 +19,9 @@ import (
 
 // Connects to the database
 func loadDb() *sql.DB {
-	db, err := sql.Open("crate", dbstring)
+	db, err := sql.Open("postgres", dbstring)
 	// If can't connect to DB
-	failOnError(err, "Couldn't connect to CrateDB")
+	failOnError(err, "Couldn't connect to Database")
 	return db
 }
 
@@ -39,14 +39,14 @@ func runningInDocker() bool {
 //
 func failOnError(err error, msg string) {
 	if err != nil {
-		fmt.Printf("%s: %s", msg, err)
+		fmt.Printf("%s: %s\n", msg, err)
 
 	}
 }
 
 func failGracefully(err error, msg string) {
 	if err != nil {
-		fmt.Printf("%s: %s", msg, err)
+		fmt.Printf("%s: %s\n", msg, err)
 	}
 }
 func SocketClient(symbol string, userID string) string {
