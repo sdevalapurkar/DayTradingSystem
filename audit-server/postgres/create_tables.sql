@@ -1,48 +1,48 @@
 CREATE TABLE IF NOT EXISTS user_commands(
-    timestamp LONG,
+    timestamp BIGINT,
     transaction_num INT,
-    server STRING,
-    command STRING,
-    stock STRING,
-    filename STRING,
-    funds FLOAT,
-    user_id STRING
+    server VARCHAR(64),
+    command VARCHAR(64),
+    stock VARCHAR(64),
+    filename VARCHAR(64),
+    funds REAL,
+    user_id VARCHAR(64)
 );
 CREATE TABLE IF NOT EXISTS system_events(
-    timestamp LONG,
+    timestamp BIGINT,
     transaction_num INT,
-    server STRING,
-    user_id STRING,
-    command STRING,
-    stock STRING,
-    filename STRING,
-    funds FLOAT
+    server VARCHAR(64),
+    user_id VARCHAR(64),
+    command VARCHAR(64),
+    stock VARCHAR(64),
+    filename VARCHAR(64),
+    funds REAL
 );
 CREATE TABLE IF NOT EXISTS quote_server_events(
-    timestamp LONG,
+    timestamp BIGINT,
     transaction_num INT,
-    server STRING,
-    user_id STRING,	  
-    stock STRING,  
-    crypto_key STRING,
-    quote_server_time LONG,
-    price FLOAT    
+    server VARCHAR(64),
+    user_id VARCHAR(64),	  
+    stock VARCHAR(64),  
+    crypto_key VARCHAR(64),
+    quote_server_time BIGINT,
+    price REAL    
 );
 CREATE TABLE IF NOT EXISTS account_transactions(
-    timestamp LONG,
-    server STRING,
+    timestamp BIGINT,
+    server VARCHAR(64),
     transaction_num INT, 
-    action STRING,
-    user_id STRING,
-    funds FLOAT  
+    action VARCHAR(64),
+    user_id VARCHAR(64),
+    funds REAL  
 );
 CREATE TABLE IF NOT EXISTS error_events(
-    timestamp LONG,
-    server STRING,
+    timestamp BIGINT,
+    server VARCHAR(64),
     transaction_num INT,
-    user_id STRING,
-    stock STRING,
-    filename STRING,
-    error_message STRING,
-    funds FLOAT     
+    user_id VARCHAR(64),
+    stock VARCHAR(64),
+    filename VARCHAR(64),
+    error_message VARCHAR(64),
+    funds REAL     
 );

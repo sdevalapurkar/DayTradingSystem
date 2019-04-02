@@ -23,16 +23,17 @@ const (
 )
 
 var (
+	/*
 	auditstring = func() string {
 		if runningInDocker() {
 			return "http://audit-db:4200"
 		}
 		return "http://localhost:4201"
 	}()
-
+	*/
 	auditstring = fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable", host, port, user, dbname)
 
-	db = loadDb(auditstring)
+	db = loadDb(auditstring, 0)
 )
 
 func runningInDocker() bool {
@@ -44,18 +45,27 @@ func runningInDocker() bool {
 
 func failOnError(err error, msg string) {
 	if err != nil {
-		fmt.Printf("%s: %s", msg, err)
+		fmt.Printf("%s: %s\n", msg, err)
 		panic(err)
 	}
 }
 
-func loadDb(dbstring string) *sql.DB {
-	db, err := sql.Open("postgres", auditstring)
+var count = 0
 
+func loadDb(dbstring string, count int) *sql.DB {
+	db, err := sql.Open("postgres", auditstring)
+	
 	// If can't connect to DB
 	failOnError(err, "Couldn't connect to DB")
 	err = db.Ping()
+	/*
 	failOnError(err, "Couldn't ping DB")
+	*/
+	if err != nil && count <= 100 {
+		db = loadDb(dbstring, count + 1)
+	}else {
+		failOnError(err, "couldn't Ping to DB")
+	}
 	return db
 }
 
@@ -565,7 +575,7 @@ func dumpLog(filename string, username string, isUser bool) {
 	logs := []LogType{}
 
 	// Get usercommands
-	queryString := "SELECT * FROM user_commands" + userquery
+	queryString := "SELECT command, filename, funds, server, stock, timestamp, transaction_num, user_id FROM user_commands" + userquery
 	rows, err := db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
 	defer rows.Close()
@@ -576,6 +586,7 @@ func dumpLog(filename string, username string, isUser bool) {
 
 		if err := rows.Scan(&logEvent.Command, &logEvent.Filename, &logEvent.Funds, &logEvent.Server,
 			&logEvent.StockSymbol, &logEvent.Timestamp, &logEvent.TransactionNum, &logEvent.Username); err != nil {
+			fmt.Println("-----------------------HERE YOOOOOOO-------------------------")
 			log.Fatal(err)
 		}
 
@@ -583,7 +594,7 @@ func dumpLog(filename string, username string, isUser bool) {
 	}
 
 	// Get systemevents
-	queryString = "SELECT * FROM system_events" + userquery
+	queryString = "SELECT command, filename, funds, server, stock, timestamp, transaction_num, user_id FROM system_events" + userquery
 
 	rows, err = db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -594,6 +605,7 @@ func dumpLog(filename string, username string, isUser bool) {
 
 		if err := rows.Scan(&logEvent.Command, &logEvent.Filename, &logEvent.Funds, &logEvent.Server,
 			&logEvent.StockSymbol, &logEvent.Timestamp, &logEvent.TransactionNum, &logEvent.Username); err != nil {
+			fmt.Println("---------------------------HERERER TOOOOOO-------------------------------")
 			log.Fatal(err)
 		}
 
@@ -601,7 +613,7 @@ func dumpLog(filename string, username string, isUser bool) {
 	}
 
 	// Get quoteserver
-	queryString = "SELECT * FROM quote_server_events" + userquery
+	queryString = "SELECT crypto_key, price, quote_server_time, server, stock, timestamp, transaction_num, user_id FROM quote_server_events" + userquery
 
 	rows, err = db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -612,6 +624,7 @@ func dumpLog(filename string, username string, isUser bool) {
 
 		if err := rows.Scan(&logEvent.CryptoKey, &logEvent.Price, &logEvent.QuoteServerTime,
 			&logEvent.Server, &logEvent.StockSymbol, &logEvent.Timestamp, &logEvent.TransactionNum, &logEvent.Username); err != nil {
+			fmt.Println("--------------------------Still herererererer-------------------------------")
 			log.Fatal(err)
 		}
 
@@ -619,7 +632,7 @@ func dumpLog(filename string, username string, isUser bool) {
 	}
 
 	// Get accounttransactions
-	queryString = "SELECT * FROM account_transactions" + userquery
+	queryString = "SELECT action, funds, server, timestamp, transaction_num, user_id FROM account_transactions" + userquery
 
 	rows, err = db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -630,6 +643,7 @@ func dumpLog(filename string, username string, isUser bool) {
 
 		if err := rows.Scan(&logEvent.Action, &logEvent.Funds, &logEvent.Server, &logEvent.Timestamp,
 			&logEvent.TransactionNum, &logEvent.Username); err != nil {
+			fmt.Println("-------------------------- ALMOST THER-------------------------------")
 			log.Fatal(err)
 		}
 
@@ -637,7 +651,7 @@ func dumpLog(filename string, username string, isUser bool) {
 	}
 
 	// Get errorevents
-	queryString = "SELECT * FROM error_events" + userquery
+	queryString = "SELECT error_message, filename, funds, server, stock, timestamp, transaction_num, user_id FROM error_events" + userquery
 
 	rows, err = db.Query(queryString)
 	failOnError(err, "Failed to prepare query")
@@ -648,6 +662,7 @@ func dumpLog(filename string, username string, isUser bool) {
 
 		if err := rows.Scan(&logEvent.ErrorMessage, &logEvent.Filename, &logEvent.Funds, &logEvent.Server,
 			&logEvent.StockSymbol, &logEvent.Timestamp, &logEvent.TransactionNum, &logEvent.Username); err != nil {
+			fmt.Println("----------------------------LAST ONE WOOO-------------------------------")
 			log.Fatal(err)
 		}
 
