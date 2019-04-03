@@ -3,7 +3,7 @@ ENV http_proxy 'http://192.168.1.1:3128'
 ENV https_proxy 'http://192.168.1.1:3128'
 
 COPY . /
-#COPY ./crate.yml /crate/config/
+COPY ./crate.yml /crate/config/
 
 
 RUN ln -sf /usr/bin/python3.6 /usr/bin/python3

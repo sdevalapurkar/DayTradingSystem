@@ -57,7 +57,9 @@ func fireTrigger(w http.ResponseWriter, UserID string, Symbol string, method str
 		return
 	}
 
-	quantity = int(amount / getQuote(Symbol, transactionNum, UserID))
+	quoteValue := getQuote(Symbol, transactionNum, UserID)
+	quantity = int(amount / quoteValue)
+	amountSpent := quoteValue * float64(quantity)
 
 	// Delete buy/sell amount from user's account
 	queryString = "DELETE FROM " + method + "_amounts " + whereCond
@@ -71,9 +73,37 @@ func fireTrigger(w http.ResponseWriter, UserID string, Symbol string, method str
 	// Add/subtract the stocks to user's account
 	if method == "buy" {
 		buyStock(w, UserID, Symbol, strconv.Itoa(quantity), transactionNum)
+
+		queryString = "UPDATE users SET balance = balance - $1 WHERE user_id = $2"
+		stmt, err = db.Prepare(queryString)
+		failOnErrorNew(w, err, "Failed to prepare withdraw query")
+
+		// Withdraw funds from user's account
+		res, err := stmt.Exec(amountSpent, UserID)
+		failOnErrorNew(w, err, "Failed to withdraw money from user account")
+
+		numrows, err := res.RowsAffected()
+		if numrows < 1 {
+			failOnErrorNew(w, err, "Failed to reserve funds")
+		}
+
 		logSystemEvent(transactionNum, "transaction-server", "BUY", UserID, Symbol, "", float64(quantity))
 	} else {
 		sellStock(UserID, Symbol, strconv.Itoa(quantity), transactionNum)
+
+		queryString = "UPDATE users SET balance = balance + $1 WHERE user_id = $2"
+		stmt, err = db.Prepare(queryString)
+		failOnErrorNew(w, err, "Failed to prepare withdraw query")
+
+		// Withdraw funds from user's account
+		res, err := stmt.Exec(amountSpent, UserID)
+		failOnErrorNew(w, err, "Failed to withdraw money from user account")
+
+		numrows, err := res.RowsAffected()
+		if numrows < 1 {
+			failOnErrorNew(w, err, "Failed to reserve funds")
+		}
+
 		logSystemEvent(transactionNum, "transaction-server", "SELL", UserID, Symbol, "", float64(quantity))
 	}
 }

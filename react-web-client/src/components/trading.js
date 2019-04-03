@@ -581,14 +581,14 @@ export default class Trading extends Component {
                         <input className="input-class-name" placeholder="Enter stock symbol" type="text" onChange={evt => this.setState({ stockForSellTrigger: evt.target.value })} />
                         <input className="input-class-name" placeholder="Enter amount" type="text" onChange={evt => this.setState({ amountForSellTrigger: evt.target.value })} />
                     </label>
-                    <input className="button-fancy-newer" value="Set Buy Trigger" onClick={() => this.setSellTrigger()} />
+                    <input className="button-fancy-newer" value="Set Sell Trigger" onClick={() => this.setSellTrigger()} />
                 </form>
                 <form className="form-class-name">
                     <p>Cancel Sell Amount/Trigger:</p>
                     <label>
                         <input className="input-class-name" placeholder="Enter stock symbol" type="text" onChange={evt => this.setState({ stockForCancelSellAmount: evt.target.value })} />
                     </label>
-                    <input className="button-fancy-newest" value="Cancel Buy Amount/Trigger" onClick={() => this.cancelSetSellAmount()} />
+                    <input className="button-fancy-newest" value="Cancel Sell Amount/Trigger" onClick={() => this.cancelSetSellAmount()} />
                 </form>
                 <p></p>
                 <p></p>
