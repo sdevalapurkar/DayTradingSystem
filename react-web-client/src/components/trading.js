@@ -41,6 +41,8 @@ export default class Trading extends Component {
             stockForSellTrigger: '',
             amountForSellTrigger: 0,
             stockForCancelSellAmount: 0,
+            buyRefundAmount: 0,
+            sellRefundAmount: 0,
         }
     }
 
@@ -85,6 +87,8 @@ export default class Trading extends Component {
         const userID = this.props.userState.userID;
         axios.post(`${host}:${port}/cancel_sell`, {
             'userID': userID,
+            'symbol': this.state.stockToSell,
+            'amount': parseFloat(this.state.sellRefundAmount),
             'transactionNum': 1,
         })
         .then(response => {
@@ -131,6 +135,7 @@ export default class Trading extends Component {
         const userID = this.props.userState.userID;
         axios.post(`${host}:${port}/cancel_buy`, {
             'userID': userID,
+            'amount': parseFloat(this.state.buyRefundAmount),
             'transactionNum': 1,
         })
         .then(response => {
@@ -219,6 +224,9 @@ export default class Trading extends Component {
             return;
         } else if (!this.isPositiveNumber(this.state.amountToBuy)) {
             return;
+        } else if (!this.validateRegex(this.state.stockToBuy)) {
+            alert('No special characters or numbers in the stock symbol and a max of 3 characters.');
+            return;
         }
 
         const userID = this.props.userState.userID;
@@ -244,6 +252,7 @@ export default class Trading extends Component {
                 }
 
                 if (response.status == 200) {
+                    this.setState({ buyRefundAmount: response.data });
                     this.handleClickOpen();
                 }
             })
@@ -265,6 +274,9 @@ export default class Trading extends Component {
             alert('Please enter a stock symbol.');
             return;
         } else if (!this.isPositiveNumber(this.state.amountToSell)) {
+            return;
+        } else if (!this.validateRegex(this.state.stockToSell)) {
+            alert('No special characters or numbers in the stock symbol and a max of 3 characters.');
             return;
         }
 
@@ -290,6 +302,8 @@ export default class Trading extends Component {
                     return;
                 }
                 if (response.data == '' && response.status == 200) {
+                    console.log('response back from sell is: ', response.data);
+                    this.setState({ sellRefundAmount: response.data });
                     this.handleClickOpenSell();
                 }
             })
@@ -310,6 +324,9 @@ export default class Trading extends Component {
             alert('Please enter a stock symbol.');
             return;
         } else if (!this.isPositiveNumber(this.state.amountForBuyAmount)) {
+            return;
+        } else if (!this.validateRegex(this.state.stockForBuyAmount)) {
+            alert('No special characters or numbers in the stock symbol and a max of 3 characters.');
             return;
         }
 
@@ -341,6 +358,9 @@ export default class Trading extends Component {
             return;
         } else if (!this.isPositiveNumber(this.state.amountForBuyTrigger)) {
             return;
+        } else if (!this.validateRegex(this.state.stockForBuyTrigger)) {
+            alert('No special characters or numbers in the stock symbol and a max of 3 characters.');
+            return;
         }
 
         const userID = this.props.userState.userID;
@@ -368,6 +388,9 @@ export default class Trading extends Component {
             return;
         } else if (!this.state.stockForCancelBuyAmount) {
             alert('Please enter a stock symbol.');
+            return;
+        } else if (!this.validateRegex(this.state.stockForCancelBuyAmount)) {
+            alert('No special characters or numbers in the stock symbol and a max of 3 characters.');
             return;
         }
 
@@ -397,6 +420,9 @@ export default class Trading extends Component {
             alert('Please enter a stock symbol.');
             return;
         } else if (!this.isPositiveNumber(this.state.amountForSellAmount)) {
+            return;
+        } else if (!this.validateRegex(this.state.stockForSellAmount)) {
+            alert('No special characters or numbers in the stock symbol and a max of 3 characters.');
             return;
         }
 
@@ -428,6 +454,9 @@ export default class Trading extends Component {
             return;
         } else if (!this.isPositiveNumber(this.state.amountForSellTrigger)) {
             return;
+        } else if (!this.validateRegex(this.state.stockForSellTrigger)) {
+            alert('No special characters or numbers in the stock symbol and a max of 3 characters.');
+            return;
         }
 
         const userID = this.props.userState.userID;
@@ -455,6 +484,9 @@ export default class Trading extends Component {
             return;
         } else if (!this.state.stockForCancelSellAmount) {
             alert('Please enter a stock symbol.');
+            return;
+        } else if (!this.validateRegex(this.state.stockForCancelSellAmount)) {
+            alert('No special characters or numbers in the stock symbol and a max of 3 characters.');
             return;
         }
 
@@ -595,7 +627,7 @@ export default class Trading extends Component {
                     <DialogTitle id="alert-dialog-title">{"Commit your Transaction"}</DialogTitle>
                     <DialogContent>
                         <DialogContentText id="alert-dialog-description">
-                        {`Stock ${this.state.stockToSell} is valued at $${this.state.stockQuoteValue} per share. Are you sure you would like to buy $${this.state.amountToSell} at this time?`}
+                        {`Stock ${this.state.stockToSell} is valued at $${this.state.stockQuoteValue} per share. Are you sure you would like to sell $${this.state.amountToSell} at this time?`}
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>

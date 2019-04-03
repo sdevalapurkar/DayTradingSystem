@@ -278,7 +278,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// Add buy transaction to front of user's transaction list
 		cache.LPush(req.UserID+":buy", req.Symbol+":"+strconv.Itoa(buyNumber))
-		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(strconv.FormatFloat(cost, 'f', -1, 64)))
 	} else {
 		w.Write([]byte("Insufficient funds mate"))
 	}
@@ -346,8 +346,9 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := struct {
 		UserID         string
+		Amount		   float64
 		TransactionNum int
-	}{"", 0}
+	}{"", 0.0, 0}
 
 	setupResponse(&w, r)
 	if (*r).Method == "OPTIONS" {
@@ -356,6 +357,22 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnErrorNew(w, err, "Failed to parse request")
+
+	fmt.Println("amount to refund")
+	fmt.Println(req.Amount)
+
+	queryString := "UPDATE users SET balance = balance + $1 WHERE user_id = $2"
+	stmt, err := db.Prepare(queryString)
+	failOnErrorNew(w, err, "Failed to prepare refund query")
+
+	// Withdraw funds from user's account
+	res, err := stmt.Exec(req.Amount, req.UserID)
+	failOnErrorNew(w, err, "Failed to refund money into user account")
+
+	numrows, err := res.RowsAffected()
+	if numrows < 1 {
+		failOnErrorNew(w, err, "Failed to refund funds")
+	}
 
 	cache.LPop(req.UserID + ":buy")
 
@@ -430,7 +447,7 @@ func sellHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(salePrice)
 		cache.LPush(req.UserID+":sell", req.Symbol+":"+strconv.FormatFloat(salePrice, 'f', -1, 64))
 	}
-	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(strconv.FormatInt(int64(sellNumber), 10)))
 }
 
 // Tested
@@ -503,8 +520,10 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := struct {
 		UserID         string
+		Symbol		   string
+		Amount		   float64
 		TransactionNum int
-	}{"", 0}
+	}{"", "", 0.0, 0}
 
 	setupResponse(&w, r)
 	if (*r).Method == "OPTIONS" {
@@ -513,6 +532,19 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&req)
 	failOnErrorNew(w, err, "Failed to parse request")
+
+	queryString := "UPDATE stocks SET quantity = quantity + $1 where user_id = $2 and symbol = $3;"
+	stmt, err := db.Prepare(queryString)
+	failOnErrorNew(w, err, "Failed to prepare query")
+
+	// Refund the stocks to sell from user's account
+	res, err := stmt.Exec(req.Amount, req.UserID, req.Symbol)
+	failOnErrorNew(w, err, "Failed to refund stocks to sell")
+
+	numrows, err := res.RowsAffected()
+	if numrows < 1 {
+		failOnErrorNew(w, err, "Failed to refund stocks to sell")
+	}
 
 	logUserCommand(req.TransactionNum, "transaction-server", "CANCEL_SELL", req.UserID, "", "", 0.0)
 

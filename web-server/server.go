@@ -195,8 +195,9 @@ func cancelBuyHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := struct {
 		UserID         string
+		Amount		   float64
 		TransactionNum int
-	}{"", 0}
+	}{"", 0.0, 0}
 
 	setupResponse(&w, r)
 	if (*r).Method == "OPTIONS" {
@@ -293,8 +294,10 @@ func cancelSellHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := struct {
 		UserID         string
+		Symbol		   string
+		Amount		   float64
 		TransactionNum int
-	}{"", 0}
+	}{"", "", 0.0, 0}
 
 	setupResponse(&w, r)
 	if (*r).Method == "OPTIONS" {
