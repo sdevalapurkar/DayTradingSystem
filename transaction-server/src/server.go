@@ -80,7 +80,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 
 		failGracefully(err, "Failed to get add request")
 	}
-
+	fmt.Println(req.Amount)
 	logUserCommand(req.TransactionNum, "transaction-server", "ADD", req.UserID, "", "", req.Amount)
 
 	if req.Amount < 0 {
