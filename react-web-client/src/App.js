@@ -116,9 +116,11 @@ class App extends Component {
               }
             </Navigation>
           </Header>
-          <Drawer title={<Link className="font-styling" style={{textDecoration: 'none', color: 'black'}} to="/">Day Trading System</Link>}>
+          <Drawer title={<Link onClick={() => this.hideToggle(false, true)} className="font-styling" style={{textDecoration: 'none', color: 'black'}} to="/">Day Trading System</Link>}>
             <Navigation>
-              <Link className="font-styling" onClick={() => this.hideToggle(false, true)} to="/">Home</Link>
+              {this.state.isLoggedIn &&
+                <Link className="font-styling" onClick={() => this.hideToggle(false, true)} to="/login">Home</Link>
+              }
               {!this.state.isLoggedIn &&
                 <Link className="font-styling" onClick={() => this.hideToggle(true)} to="/login">Login</Link>
               }
