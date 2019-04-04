@@ -73,17 +73,17 @@ class App extends Component {
     this.setState({ userState });
   }
 
-  getAccountDetails() {
+  getAccountDetails(isDrawer=false) {
+    if (isDrawer) {
+        this.hideToggle();
+    }
     console.log('user id?', this.state.userState.userID);
     console.log(`${host}:${port}/login`);
     axios.post(`${host}:${port}/get_user_data`, {
-        'userID': 'eee',
+        'userID': this.state.userState.userID,
     })
     .then(response => {
-        console.log('response is: ', response);
-        response.data = { ...response.data, userID: this.state.userID };
-        console.log('response.data ', response.data);
-        // this.props.setUserStateValues(response.data);
+        response.data = { ...response.data, userID: this.state.userState.userID };
         this.updateUserStateValues(response.data);
     })
     .catch(err => {
@@ -123,7 +123,7 @@ class App extends Component {
                 <Link className="font-styling" onClick={() => this.hideToggle(true)} to="/login">Login</Link>
               }
               {this.state.isLoggedIn &&
-                <Link className="font-styling" onClick={() => this.hideToggle()} to="/myaccount">View my Account</Link>
+                <Link className="font-styling" onClick={() => this.getAccountDetails(true)} to="/myaccount">View my Account</Link>
               }
               <Link className="font-styling" onClick={() => this.hideToggle()} to="/contact">Meet the Team</Link>
             </Navigation>

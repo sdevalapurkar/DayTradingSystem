@@ -7,6 +7,8 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Button from '@material-ui/core/Button';
+import { Content } from 'react-mdl';
+import Main from './main';
 
 const host = 'http://localhost';
 const port = 8123;
@@ -509,6 +511,7 @@ export default class Trading extends Component {
     }
 
     render() {
+        console.log('inside render of trading', this.props);
         return (
             <div>
                 <div>
