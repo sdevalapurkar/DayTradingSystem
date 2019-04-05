@@ -45,7 +45,9 @@ export default class Trading extends Component {
             stockForCancelSellAmount: 0,
             buyRefundAmount: 0,
             sellRefundAmount: 0,
-            filename: ''
+            filename: '',
+            numStocksBeingBought: 0,
+            numStocksBeingSold: 0,
         }
     }
 
@@ -242,6 +244,7 @@ export default class Trading extends Component {
             const obj = { quote: response.data };
             console.log(response.data);
             this.setState({ stockQuoteValue: Math.round(obj.quote * 100) / 100 });
+            this.setState({ numStocksBeingBought: parseInt(this.state.amountToBuy / obj.quote) });
             axios.post(`${host}:${port}/buy`, {
                 'userID': userID,
                 'amount': parseFloat(this.state.amountToBuy),
@@ -293,6 +296,7 @@ export default class Trading extends Component {
         .then(response => {
             const obj = { quote: response.data };
             this.setState({ stockQuoteValue: obj.quote });
+            this.setState({ numStocksBeingSold: parseInt(this.state.amountToSell / obj.quote) });
 
             axios.post(`${host}:${port}/sell`, {
                 'userID': userID,
@@ -643,7 +647,7 @@ export default class Trading extends Component {
                     <DialogTitle id="alert-dialog-title">{"Commit your Transaction"}</DialogTitle>
                     <DialogContent>
                         <DialogContentText id="alert-dialog-description">
-                            {`Stock ${this.state.stockToBuy} is valued at $${this.state.stockQuoteValue} per share. Are you sure you would like to buy $${this.state.amountToBuy} at this time?`}
+                            {`Stock ${this.state.stockToBuy} is valued at $${this.state.stockQuoteValue} per share. Are you sure you would like to buy $${this.state.amountToBuy} at this time (${this.state.numStocksBeingBought} stocks)?`}
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
@@ -666,7 +670,7 @@ export default class Trading extends Component {
                     <DialogTitle id="alert-dialog-title">{"Commit your Transaction"}</DialogTitle>
                     <DialogContent>
                         <DialogContentText id="alert-dialog-description">
-                        {`Stock ${this.state.stockToSell} is valued at $${this.state.stockQuoteValue} per share. Are you sure you would like to sell $${this.state.amountToSell} at this time?`}
+                        {`Stock ${this.state.stockToSell} is valued at $${this.state.stockQuoteValue} per share. Are you sure you would like to sell $${this.state.amountToSell} at this time (${this.state.numStocksBeingSold} stocks)?`}
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
