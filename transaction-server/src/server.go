@@ -899,7 +899,7 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse request parameters into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse request")
+	failOnErrorNew(w, err, "Failed to parse request")
 
 	if req.UserID == "" {
 		logUserCommand(req.TransactionNum, "transaction-server", "DUMPLOG", "", "", req.Filename, 0.0)
@@ -912,12 +912,12 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 
 	if req.UserID == "" {
 		res, err := http.Post(auditServer+"/dumpLog", "application/json; charset=utf-8", b)
-		failOnError(err, "Failed to retrieve quote from quote server")
+		failOnErrorNew(w, err, "Failed to retrieve quote from quote server")
 		w.Write([]byte("Failed to log"))
 		defer res.Body.Close()
 	} else {
 		res, err := http.Post(auditServer+"/dumpUserLog", "application/json; charset=utf-8", b)
-		failOnError(err, "Failed to retrieve quote from quote server")
+		failOnErrorNew(w, err, "Failed to retrieve quote from quote server")
 		w.Write([]byte("Failed to log"))
 		defer res.Body.Close()
 	}

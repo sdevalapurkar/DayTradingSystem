@@ -495,22 +495,27 @@ func cancelSetSellHandler(w http.ResponseWriter, r *http.Request) {
 
 func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	w.WriteHeader(http.StatusOK)
+
 	req := struct {
 		TransactionNum int
 		Filename       string
 		UserID         string
 	}{0, "", ""}
 
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
+
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
-	failOnError(err, "Failed to parse the request")
+	failOnErrorNew(w, err, "Failed to parse the request")
 
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r1, err := http.Post(transactionServer+"/dumplog", "application/json; charset=utf-8", b)
-	failOnError(err, "Failed to post the request")
+	failOnErrorNew(w, err, "Failed to post the request")
 
 	body, err := ioutil.ReadAll(r1.Body)
 	w.Write([]byte(body))

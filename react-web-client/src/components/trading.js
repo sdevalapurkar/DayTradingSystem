@@ -45,6 +45,7 @@ export default class Trading extends Component {
             stockForCancelSellAmount: 0,
             buyRefundAmount: 0,
             sellRefundAmount: 0,
+            filename: ''
         }
     }
 
@@ -510,6 +511,33 @@ export default class Trading extends Component {
         .catch(err => {});
     }
 
+    dumpLog() {
+        if (!this.state.filename) {
+            alert('Please enter a filename.');  
+            return;
+        } else if (!this.validateRegex(this.state.filename)) {
+            alert('No special characters or numbers in the filename.');
+            return;
+        }
+
+        const userID = this.props.userState.userID;
+        axios.post(`${host}:${port}/dumplog`, {
+            'transactionNum': 1,
+            'filename': this.state.filename,
+            'userID': userID,
+        })
+        .then(response => {
+            if (response.data != '') {
+                alert(response.data);
+                return;
+            }
+            if (response.data == '' && response.status == 200) {
+                alert(`Successfully performed dumplog.`);
+            }
+        })
+        .catch(err => {});
+    }
+
     render() {
         console.log('inside render of trading', this.props);
         return (
@@ -592,6 +620,13 @@ export default class Trading extends Component {
                         <input className="input-class-name" placeholder="Enter stock symbol" type="text" onChange={evt => this.setState({ stockForCancelSellAmount: evt.target.value })} />
                     </label>
                     <input className="button-fancy-newest" value="Cancel Sell Amount/Trigger" onClick={() => this.cancelSetSellAmount()} />
+                </form>
+                <form className="form-class-name">
+                    <p>Dumplog:</p>
+                    <label>
+                        <input className="input-class-name" placeholder="Enter filename" type="text" onChange={evt => this.setState({ filename: evt.target.value })} />
+                    </label>
+                    <input className="button-fancy-new" value="Dumplog" onClick={() => this.dumpLog()} />
                 </form>
                 <p></p>
                 <p></p>
