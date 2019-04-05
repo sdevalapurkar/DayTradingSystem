@@ -240,6 +240,10 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get price of requested stock
 	price := getQuote(req.Symbol, req.TransactionNum, req.UserID)
+
+	fmt.Println(price)
+	fmt.Println(req.Amount)
+
 	// Calculate total cost to buy given amount of given stock
 	buyNumber := int(req.Amount / price)
 	cost := float64(buyNumber) * price
@@ -276,6 +280,10 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 		if numrows < 1 {
 			failOnErrorNew(w, err, "Failed to reserve funds")
 		}
+
+		fmt.Println(buyNumber)
+		fmt.Println(strconv.Itoa(buyNumber))
+
 		// Add buy transaction to front of user's transaction list
 		cache.LPush(req.UserID+":buy", req.Symbol+":"+strconv.Itoa(buyNumber))
 		w.Write([]byte(strconv.FormatFloat(cost, 'f', -1, 64)))
@@ -307,6 +315,9 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 	// Get most recent buy transaction
 	task := cache.LPop(req.UserID + ":buy")
 	tasks := strings.Split(task.Val(), ":")
+
+	fmt.Println("tasks 1 (aka quantity)")
+	fmt.Println(tasks[1])
 
 	// Check if there are any buy transactions to perform
 	if len(tasks) <= 1 {
@@ -912,15 +923,15 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 
 	if req.UserID == "" {
 		res, err := http.Post(auditServer+"/dumpLog", "application/json; charset=utf-8", b)
-		failOnErrorNew(w, err, "Failed to retrieve quote from quote server")
-		w.Write([]byte("Failed to log"))
+		failOnErrorNew(w, err, "Failed to dumplog.")
 		defer res.Body.Close()
 	} else {
 		res, err := http.Post(auditServer+"/dumpUserLog", "application/json; charset=utf-8", b)
-		failOnErrorNew(w, err, "Failed to retrieve quote from quote server")
-		w.Write([]byte("Failed to log"))
+		failOnErrorNew(w, err, "Failed to dump user log.")
 		defer res.Body.Close()
 	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {

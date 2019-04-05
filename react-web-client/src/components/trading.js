@@ -235,11 +235,12 @@ export default class Trading extends Component {
         const userID = this.props.userState.userID;
         axios.post(`${host}:${port}/quote`, {
             'userID': userID,
-            'symbol': this.state.quoteSymbol,
+            'symbol': this.state.stockToBuy,
             'transactionNum': 1,
         })
         .then(response => {
             const obj = { quote: response.data };
+            console.log(response.data);
             this.setState({ stockQuoteValue: Math.round(obj.quote * 100) / 100 });
             axios.post(`${host}:${port}/buy`, {
                 'userID': userID,
@@ -286,7 +287,7 @@ export default class Trading extends Component {
         const userID = this.props.userState.userID;
         axios.post(`${host}:${port}/quote`, {
             'userID': userID,
-            'symbol': this.state.quoteSymbol,
+            'symbol': this.state.stockToSell,
             'transactionNum': 1,
         })
         .then(response => {
