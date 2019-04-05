@@ -39,7 +39,7 @@ func hashServer(user string) string {
 	h := fnv.New32a()
         h.Write([]byte(user))
 	hash := h.Sum32()
-	hash = hash%3
+	hash = hash%5
 	switch hash {
 	case 0:
 		return server1
@@ -47,9 +47,12 @@ func hashServer(user string) string {
 		return server2
 	case 2:
 		return server3
-	//case 3: 
-	//	return server4
+	case 3: 
+		return server4
+	case 4:
+		return server5
 	}
+
 	return server1
 }
 
