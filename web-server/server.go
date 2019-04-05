@@ -31,10 +31,11 @@ var transactionServer = func() string {
 //     msg:    a message to print to the console if an error is found
 
 func hashServer(user string) string {
-	server1 := "http://192.168.1.228:8080"
-	server2 := "http://192.168.1.210:8080"
-	server3 := "http://192.168.1.229:8080"
-	//server4 := "192.168.1.233"
+	server1 := "http://192.168.1.169:8080"
+	server2 := "http://192.168.1.156:8080"
+	server3 := "http://192.168.1.180:8080"
+	server4 := "http://192.168.1.181:8080"
+	server5 := "http://192.168.1.217:8080"
 	h := fnv.New32a()
         h.Write([]byte(user))
 	hash := h.Sum32()
