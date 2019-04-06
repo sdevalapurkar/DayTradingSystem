@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-//	"hash/fnv"
+	"hash/fnv"
 )
 
 func runningInDocker() bool {
@@ -30,16 +30,16 @@ var transactionServer = func() string {
 //     err:    the error to check
 //     msg:    a message to print to the console if an error is found
 
-/*
 func hashServer(user string) string {
-	server1 := "http://192.168.1.250:8080"
-	server2 := "http://192.168.1.241:8080"
-	server3 := "http://192.168.1.242:8080"
-	//server4 := "192.168.1.233"
+	server1 := "http://192.168.1.169:8080"
+	server2 := "http://192.168.1.156:8080"
+	server3 := "http://192.168.1.180:8080"
+	server4 := "http://192.168.1.181:8080"
+	server5 := "http://192.168.1.217:8080"
 	h := fnv.New32a()
         h.Write([]byte(user))
 	hash := h.Sum32()
-	hash = hash%3
+	hash = hash%5
 	switch hash {
 	case 0:
 		return server1
@@ -47,15 +47,15 @@ func hashServer(user string) string {
 		return server2
 	case 2:
 		return server3
-	//case 3: 
-	//	return server4
+	case 3: 
+		return server4
+	case 4:
+		return server5
 	}
+
 	return server1
 }
-*/
-func hashServer(user string) string {
-	return "http://transaction:8080"
-}
+
 
 func failOnError(err error, msg string) {
 	if err != nil {
@@ -82,7 +82,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	// Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
-
+	
 	r1, err1 := http.Post(hashServer(req.UserID)+"/add", "application/json; charset=utf-8", b)
 	failOnError(err1, "Failed to post the request")
 
@@ -130,6 +130,7 @@ func buyHandler(w http.ResponseWriter, r *http.Request) {
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
+	
 	r1, err := http.Post(hashServer(req.UserID)+"/buy", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
 
@@ -144,17 +145,17 @@ func commitBuyHandler(w http.ResponseWriter, r *http.Request) {
 		UserID         string
 		TransactionNum int
 	}{"", 0}
-
+	
 	// Decode request parameters into struct
 	err := decoder.Decode(&req)
 	failOnError(err, "Failed to parse the request")
-
+	
 	//Encode request parameters into a struct
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
 	r1, err := http.Post(hashServer(req.UserID)+"/commit_buy", "application/json; charset=utf-8", b)
 	failOnError(err, "Failed to post the request")
-
+	
 	body, err := ioutil.ReadAll(r1.Body)
 	w.Write([]byte(body))
 }

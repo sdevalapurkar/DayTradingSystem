@@ -14,7 +14,6 @@ import (
 
 var (
 	client = &http.Client{
-		Timeout: time.Duration(time.Nanosecond),
 	}
 )
 
@@ -65,7 +64,7 @@ func sendRequest(line string) {
 	if command_type == "ADD" {
 		req := Add{}
 		req.TransactionNum, _ = strconv.Atoi(transactionNum)
-		req.UserID = arguments[1]
+		req.UserID = strings.Trim(arguments[1], " ")
 		req.Amount, _ = strconv.ParseFloat(arguments[2], 64)
 		sendToWebServer(req, command_type)
 	}
@@ -73,8 +72,8 @@ func sendRequest(line string) {
 	if command_type == "BUY" || command_type == "SELL" || command_type == "SET_BUY_AMOUNT" || command_type == "SET_SELL_AMOUNT" {
 		req := Default{}
 		req.TransactionNum, _ = strconv.Atoi(transactionNum)
-		req.UserID = arguments[1]
-		req.Symbol = arguments[2]
+		req.UserID = strings.Trim(arguments[1], " ")
+		req.Symbol = strings.Trim(arguments[2], " ")
 		req.Amount, _ = strconv.ParseFloat(arguments[3], 64)
 		sendToWebServer(req, command_type)
 	}
@@ -82,8 +81,8 @@ func sendRequest(line string) {
 	if command_type == "SET_BUY_TRIGGER" || command_type == "SET_SELL_TRIGGER" {
 		req := DefaultTrig{}
 		req.TransactionNum, _ = strconv.Atoi(transactionNum)
-		req.UserID = arguments[1]
-		req.Symbol = arguments[2]
+		req.UserID = strings.Trim(arguments[1], " ")
+		req.Symbol = strings.Trim(arguments[2], " ")
 		req.Price, _ = strconv.Atoi(arguments[3])
 		sendToWebServer(req, command_type)
 	}
@@ -91,15 +90,15 @@ func sendRequest(line string) {
 	if command_type == "QUOTE" || command_type == "CANCEL_SET_BUY" || command_type == "CANCEL_SET_SELL" {
 		req := Quote{}
 		req.TransactionNum, _ = strconv.Atoi(transactionNum)
-		req.UserID = arguments[1]
-		req.Symbol = arguments[2]
+		req.UserID = strings.Trim(arguments[1], " ")
+		req.Symbol = strings.Trim(arguments[2], " ")
 		sendToWebServer(req, command_type)
 	}
 
 	if command_type == "COMMIT_BUY" || command_type == "CANCEL_BUY" || command_type == "COMMIT_SELL" || command_type == "CANCEL_SELL" || command_type == "DISPLAY_SUMMARY" {
 		req := User{}
 		req.TransactionNum, _ = strconv.Atoi(transactionNum)
-		req.UserID = arguments[1]
+		req.UserID = strings.Trim(arguments[1], " ")
 		sendToWebServer(req, command_type)
 	}
 
@@ -107,9 +106,9 @@ func sendRequest(line string) {
 
 func sendToWebServer(r interface{}, s string) {
 	jsonValue, _ := json.Marshal(r)
-	req, _ := http.NewRequest("POST", "http://localhost:8123/"+strings.ToLower(s), bytes.NewBuffer(jsonValue))
+	req, err := http.NewRequest("POST", "http://192.168.1.223:8123/"+strings.ToLower(s), bytes.NewBuffer(jsonValue))
 	req.Close = true
-
+	fmt.Println(err)
 	req.Header.Set("Content-Type", "application/json")
 	resp, _ := client.Do(req)
 
@@ -120,15 +119,15 @@ func sendToWebServer(r interface{}, s string) {
 }
 
 func main() {
-	file, _ := os.Open("final_workload_2019")
+	file, _ := os.Open("workloads/final_workload_2019")
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 
 		commandText := scanner.Text()
-		fmt.Println(commandText)
+	
 
-		sendRequest(commandText)
-
+		go sendRequest(commandText)
+		time.Sleep(time.Millisecond)
 	}
 }
