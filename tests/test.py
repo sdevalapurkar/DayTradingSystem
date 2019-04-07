@@ -2,15 +2,14 @@ import unittest
 import requests
 import time
 import re
-from crate import client
+import psycopg2
 
 URL_ROOT = 'http://localhost:8080'
 
 class TestTransactionServer(unittest.TestCase):
 
     def setUp(self):
-        self.connection = client.connect("http://localhost:4200", username="crate")
-        self.c = self.connection.cursor()
+        self.connection = psycopg2.connect(host="127.0.0.1", port="5432", user="postgres", database="postgres")
         self.symbol = 'abc'
         self.user = 'User1'
         data = {
@@ -19,7 +18,6 @@ class TestTransactionServer(unittest.TestCase):
         }
         r = requests.post(URL_ROOT + '/quote', json=data)
         self.quote = round(float(re.search(r'.*?,.*?,(.*?)$', r.text).group(1)), 2)
-        print('quote is: ', self.quote)
         
 
     def test_0_add(self):
@@ -31,8 +29,9 @@ class TestTransactionServer(unittest.TestCase):
         requests.post(URL_ROOT + '/add', json=data)
         time.sleep(1)
         c = self.connection.cursor()
-        c.execute("SELECT * FROM users WHERE user_id=?;", (self.user,))
-        self.assertEqual(c.fetchone(), [self.quote*2, self.user])
+        c.execute("SELECT * FROM users WHERE user_id=%s;", (self.user,)) 
+        self.assertEqual(c.fetchone(), (self.user, self.quote*2,)) 
+
 
     def test_1_buy(self):
         data = {
@@ -44,11 +43,14 @@ class TestTransactionServer(unittest.TestCase):
         requests.post(URL_ROOT + '/buy', json=data)
         time.sleep(2)
         c = self.connection.cursor()
-        c.execute("SELECT * FROM users WHERE user_id=?;", (self.user,))
-        self.assertEqual(c.fetchone(), [self.quote, self.user])
+        c.execute("SELECT * FROM users WHERE user_id=%s;", (self.user,))
+        result = list(c.fetchone())
+        self.assertEqual(result[0], (self.user)) #, self.quote)) 
+        self.assertEqual(round(result[1], 2), (self.quote)) #, self.quote))
 
 
     def test_2_commit_buy(self):
+        
         data = {
             'userID': self.user,
             'transactionNum': 3
@@ -56,8 +58,8 @@ class TestTransactionServer(unittest.TestCase):
         requests.post(URL_ROOT + '/commit_buy', json=data)
         time.sleep(1)
         c = self.connection.cursor()
-        c.execute("SELECT * FROM stocks WHERE user_id=?;", (self.user,))
-        self.assertEqual(c.fetchone(), [1, self.symbol, self.user])
+        c.execute("SELECT * FROM stocks WHERE user_id=%s;", (self.user,))
+        self.assertEqual(c.fetchone(), (self.user, self.symbol, 1))
 
     def test_cancel_buy(self):
         data = {
@@ -70,8 +72,8 @@ class TestTransactionServer(unittest.TestCase):
         time.sleep(1)
         r = requests.post(URL_ROOT + '/cancel_buy', json=data)
         c = self.connection.cursor()
-        c.execute("SELECT * FROM stocks WHERE user_id=?;", (self.user,))
-        self.assertEqual(c.fetchone(), [1, self.symbol, self.user])
+        c.execute("SELECT * FROM stocks WHERE user_id=%s;", (self.user,))
+        self.assertEqual(c.fetchone(), (self.user, self.symbol, 1))
 
 
     def test_sell(self):
