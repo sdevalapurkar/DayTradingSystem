@@ -20,6 +20,8 @@ The web server, written in Golang, was later changed to use Nginx, and served as
 
 ![reliability](/reliability.png)
 
+Every component of our system was shown to have a reliability of 99.997% allowing our overall system reliability to be 99.99%.
+
 ## Team Members
 
 - Lee Zeitz
