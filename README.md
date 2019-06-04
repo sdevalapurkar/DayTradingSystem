@@ -16,9 +16,9 @@ The basic functionality that the system had to provide included but was not limi
 
 The web server, written in Golang, was later changed to use Nginx, and served as a load balancer and was able to hash the incoming user id of the request to a particular transaction server/database node to help distribute the workload. Along with this, a messaging queue was present which sat between the transaction server and the audit server. It accepted messages and delivered them to their respective consumers. It was a middleman which was used to reduce loads and delivery times. The database management system used was CrateDB, known to be a scalable effective solution for storing data in a relational format. This was later changed to Postgres for a variety of reasons.
 
-## User Interface
+## Application Reliability
 
-
+![reliability](/reliability.png)
 
 ## Team Members
 
