@@ -12,4 +12,4 @@ The basic functionality that the system had to provide included but was not limi
 
 ## System Architecture
 
-![architecture][]
+![architecture][architecture.png]
